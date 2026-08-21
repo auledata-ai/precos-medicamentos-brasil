@@ -114,8 +114,8 @@ const num = n => n.toLocaleString("pt-BR");
 const pct = n => n.toLocaleString("pt-BR", {minimumFractionDigits: 1, maximumFractionDigits: 1});
 
 const [graficos, resultados] = await Promise.all([
-  fetch("../../dados/graficos.json").then(r => r.json()),
-  fetch("../../dados/resultados.json").then(r => r.json()),
+  fetch("./dados/graficos.json").then(r => r.json()),
+  fetch("./dados/resultados.json").then(r => r.json()),
 ]);
 
 /* --- 1. histograma, ênfase: o miolo em cor, a cauda em cinza de contexto --- */
@@ -240,4 +240,14 @@ const [graficos, resultados] = await Promise.all([
     `distribuição, não das pontas. Caçar os escândalos é caçar erro de digitação.`;
 }
 </script>
+
+<footer style="margin-top:38px;padding-top:20px;border-top:1px solid var(--grelha);
+               font-size:12.5px;color:var(--ink-3);line-height:1.6">
+  Fonte: <a href="https://dadosabertos.compras.gov.br/" style="color:var(--ink-2)">API de
+  pesquisa de preços do Compras.gov.br</a>. Método, código e decisões em
+  <a href="https://github.com/auledata-ai/precos-medicamentos-brasil" style="color:var(--ink-2)">github.com/auledata-ai/precos-medicamentos-brasil</a>.<br>
+  Estes números medem distância a uma referência interna, não prejuízo, e não
+  identificam fraude. O que <a href="https://github.com/auledata-ai/precos-medicamentos-brasil/blob/main/docs/resultados.md" style="color:var(--ink-2)">não se pode concluir</a> deles está documentado.<br><br>
+  <a href="https://auledata.com.br" style="color:var(--cyan);text-decoration:none">Aule Data</a>
+</footer>
 </html>
