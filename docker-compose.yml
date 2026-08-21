@@ -6,7 +6,8 @@
 # LocalExecutor da paralelismo por processos no mesmo container e chega.
 
 x-airflow-comum: &airflow-comum
-  image: apache/airflow:2.10.4-python3.12
+  build: .
+  image: precos-medicamentos/airflow:2.10.4
   environment: &airflow-env
     AIRFLOW__CORE__EXECUTOR: LocalExecutor
     AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
@@ -18,7 +19,8 @@ x-airflow-comum: &airflow-comum
     AIRFLOW__CORE__PARALLELISM: "8"
     AIRFLOW__CORE__MAX_ACTIVE_TASKS_PER_DAG: "8"
     PYTHONPATH: /opt/airflow/projeto
-    _PIP_ADDITIONAL_REQUIREMENTS: "requests>=2.32 pandas>=2.2 pyarrow>=16"
+    # A DAG liga ao mesmo Postgres, pelo nome do servico na rede do compose.
+    POSTGRES_DSN: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
   volumes:
     - ./dags:/opt/airflow/dags
     - ./plugins:/opt/airflow/plugins
