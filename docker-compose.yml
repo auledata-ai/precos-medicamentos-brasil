@@ -1,0 +1,91 @@
+# Airflow com LocalExecutor e um Postgres.
+#
+# A composicao oficial do Airflow traz Celery, Redis, flower e varios workers.
+# Aqui a carga e uma DAG que faz chamadas HTTP em sequencia, com paralelismo
+# modesto: Celery seria complexidade sem retorno, e a maquina tem 7,7 GB.
+# LocalExecutor da paralelismo por processos no mesmo container e chega.
+
+x-airflow-comum: &airflow-comum
+  image: apache/airflow:2.10.4-python3.12
+  environment: &airflow-env
+    AIRFLOW__CORE__EXECUTOR: LocalExecutor
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+    AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+    AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
+    # Sem isto o scheduler recarrega os ficheiros a cada 5s e come CPU a toa.
+    AIRFLOW__SCHEDULER__MIN_FILE_PROCESS_INTERVAL: "30"
+    AIRFLOW__WEBSERVER__EXPOSE_CONFIG: "false"
+    AIRFLOW__CORE__PARALLELISM: "8"
+    AIRFLOW__CORE__MAX_ACTIVE_TASKS_PER_DAG: "8"
+    PYTHONPATH: /opt/airflow/projeto
+    _PIP_ADDITIONAL_REQUIREMENTS: "requests>=2.32 pandas>=2.2 pyarrow>=16"
+  volumes:
+    - ./dags:/opt/airflow/dags
+    - ./plugins:/opt/airflow/plugins
+    - ./logs:/opt/airflow/logs
+    - ./ingestao:/opt/airflow/projeto/ingestao
+    - ./dados:/opt/airflow/dados
+  user: "${AIRFLOW_UID}:0"
+  depends_on:
+    postgres:
+      condition: service_healthy
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres-dados:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"          # 5433 no host, para nao chocar com Postgres local
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${POSTGRES_USER}"]
+      interval: 5s
+      retries: 10
+    restart: unless-stopped
+
+  airflow-init:
+    <<: *airflow-comum
+    entrypoint: /bin/bash
+    command:
+      - -c
+      # set -e para o init falhar alto. Sem isto um erro de migracao passa
+      # despercebido, o compose da o init por concluido e o scheduler arranca
+      # contra uma base vazia.
+      - |
+        set -e
+        airflow db migrate
+        airflow users list | grep -q admin || airflow users create \
+          --username admin --password admin --firstname Aule --lastname Data \
+          --role Admin --email admin@example.com
+    restart: "no"
+
+  airflow-webserver:
+    <<: *airflow-comum
+    command: webserver
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+      interval: 20s
+      timeout: 10s
+      retries: 8
+      start_period: 60s
+    restart: unless-stopped
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully
+
+  airflow-scheduler:
+    <<: *airflow-comum
+    command: scheduler
+    restart: unless-stopped
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully
+
+volumes:
+  postgres-dados:

@@ -1,0 +1,33 @@
+[project]
+name = "precos-medicamentos-brasil"
+version = "0.1.0"
+description = "Precos de medicamentos comprados pelo setor publico brasileiro: dispersao e qualidade do dado"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "requests>=2.32",
+    "pandas>=2.2",
+    "pyarrow>=16",
+    "psycopg[binary]>=3.2",
+    "duckdb>=1.1",
+]
+
+[dependency-groups]
+dev = ["pytest>=8.0", "ruff>=0.6", "responses>=0.25"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+src = ["ingestao", "dags", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "T20"]
+# N818 exige sufixo "Error" em excecoes. E convencao de codigo em ingles, e
+# aqui o codigo e em portugues porque os campos da fonte tambem sao
+# (precoUnitario, codigoMunicipio, nomeUnidadeFornecimento). O prefixo "Erro"
+# cumpre o mesmo proposito de tornar a excecao reconhecivel a leitura.
+ignore = ["N818"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["contrato: testes que batem na API real e verificam o contrato da fonte"]
