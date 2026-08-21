@@ -16,7 +16,9 @@ import psycopg
 from analise import graficos
 from analise.resultados import tudo
 
-DADOS = Path(__file__).resolve().parent.parent / "dados"
+# Publicados dentro de `docs/`, que e a raiz do GitHub Pages. Os dados
+# brutos continuam em `dados/`, fora do repositorio.
+DADOS = Path(__file__).resolve().parent.parent / "docs" / "dados"
 DESTINO = DADOS / "resultados.json"
 DESTINO_GRAFICOS = DADOS / "graficos.json"
 

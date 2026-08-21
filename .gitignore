@@ -21,10 +21,6 @@ standalone_admin_password.txt
 
 # Dados: grandes e reobtiveis pelo pipeline
 dados/*
-# Excecao: os numeros publicados sao versionados de proposito, para que
-# uma alteracao num numero apareca em revisao e nao passe despercebida.
-!dados/resultados.json
-!dados/graficos.json
 !dados/.gitkeep
 
 # dbt
