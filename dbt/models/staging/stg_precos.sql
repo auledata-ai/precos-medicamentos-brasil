@@ -48,19 +48,71 @@ tipado as (
         (payload ->> 'modalidade')                       as modalidade,
         coletado_em
     from bruto
+),
+
+normalizado as (
+    select
+        *,
+        -- Conversao para uma base comum dentro da mesma grandeza fisica.
+        -- Volume e massa nao se convertem entre si e ficam separados: 500 ML
+        -- e 500 G do mesmo codigo sao produtos diferentes.
+        case upper(coalesce(unidade_medida, ''))
+            when 'ML'  then 'ML'
+            when 'L'   then 'ML'
+            when 'MCL' then 'ML'
+            when 'G'   then 'G'
+            when 'KG'  then 'G'
+            when 'MG'  then 'G'
+            when 'MCG' then 'G'
+            when 'UI'  then 'UI'
+            when 'KUI' then 'UI'
+            when 'DOSE(S)' then 'DOSE'
+            when 'DOSES'   then 'DOSE'
+            when 'UN'  then 'UN'
+            -- Metade dos registos nao declara unidade, e nesses a capacidade
+            -- vem a zero. Ficam nulos: sem grandeza declarada nao ha como
+            -- normalizar, e arbitrar uma inventaria dado.
+            else null
+        end as unidade_base,
+        case upper(coalesce(unidade_medida, ''))
+            when 'L'   then capacidade_unidade * 1000
+            when 'MCL' then capacidade_unidade / 1000
+            when 'KG'  then capacidade_unidade * 1000
+            when 'MG'  then capacidade_unidade / 1000
+            when 'MCG' then capacidade_unidade / 1000000
+            when 'KUI' then capacidade_unidade * 1000
+            when ''    then null
+            else capacidade_unidade
+        end as capacidade_base
+    from tipado
 )
 
 select
     *,
-    -- Chave de comparacao. So faz sentido comparar precos dentro do mesmo
-    -- item E da mesma unidade de fornecimento.
-    codigo_item || '|' || coalesce(unidade_fornecimento, 'SEM_UNIDADE')
+    -- Chave de comparacao estrita, para preco contra preco.
+    --
+    -- A versao anterior era so `codigo_item | unidade_fornecimento`, e isso
+    -- estava errado: "FRASCO" nao e uma quantidade. Um unico grupo continha
+    -- frascos de 50 ML a 2 L, e ate ML misturado com G, o que fabricava
+    -- dispersao onde ha apenas tamanhos diferentes. Afetava 781 dos 2.325
+    -- grupos com amostra util, 182 mil registos. A capacidade e a unidade
+    -- entram na chave por isso.
+    codigo_item
+        || '|' || coalesce(unidade_fornecimento, 'SEM_UNIDADE')
+        || '|' || coalesce(capacidade_unidade::text, 'SEM_CAPACIDADE')
+        || '|' || coalesce(unidade_medida, 'SEM_MEDIDA')
         as grupo_comparavel,
 
-    -- Preco por unidade de medida, quando a capacidade e conhecida. Permite
-    -- comparar uma ampola de 2 ML com uma de 10 ML. Quando nao ha
-    -- capacidade, fica nulo em vez de assumir 1: assumir inventaria dado.
-    case
-        when capacidade_unidade > 0 then preco_unitario / capacidade_unidade
-    end as preco_por_unidade_medida
-from tipado
+    -- Chave de comparacao normalizada, para preco por mililitro ou por
+    -- grama. Permite comparar tamanhos diferentes do mesmo produto sem os
+    -- confundir, que e o que a chave estrita nao faz.
+    case when unidade_base is not null
+        then codigo_item || '|' || unidade_base
+    end as grupo_normalizado,
+
+    -- Preco por unidade da base comum. Nulo quando nao ha capacidade
+    -- declarada, em vez de assumir 1: assumir inventaria dado.
+    case when capacidade_base > 0
+        then preco_unitario / capacidade_base
+    end as preco_por_unidade_base
+from normalizado
