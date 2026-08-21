@@ -31,9 +31,13 @@ create table if not exists raw.precos (
 create index if not exists precos_por_item on raw.precos (codigo_item);
 
 -- Controlo proprio, deliberadamente separado do estado do Airflow.
--- O Airflow sabe se uma task correu; isto sabe se um item foi coletado.
+-- O Airflow sabe se uma task correu; isto sabe se um PDM foi coletado.
+--
+-- A unidade e o PDM e nao o item: um PDM agrupa itens equivalentes, e a
+-- consulta por PDM devolve os precos de todos eles numa chamada. Sao 1.878
+-- PDMs contra 12.359 itens (ver ADR 0005).
 create table if not exists raw.controlo_ingestao (
-    codigo_item       text        primary key,
+    codigo_pdm        text        primary key,
     coletado_em       timestamptz,
     registos_obtidos  integer     not null default 0,
     estado            text        not null default 'pendente'

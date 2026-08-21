@@ -34,9 +34,7 @@ def ligar(dsn: str | None = None) -> psycopg.Connection:
     """Ligação ao Postgres. O DSN vem do ambiente, nunca do código."""
     dsn = dsn or os.environ.get("POSTGRES_DSN")
     if not dsn:
-        raise RuntimeError(
-            "POSTGRES_DSN não definido. Exporte a variável ou passe o dsn."
-        )
+        raise RuntimeError("POSTGRES_DSN não definido. Exporte a variável ou passe o dsn.")
     return psycopg.connect(dsn, row_factory=dict_row)
 
 
@@ -62,10 +60,13 @@ def _texto(valor: Any) -> str:
 
 
 def guardar_catalogo(conexao: psycopg.Connection, registos: list[RegistoBruto]) -> int:
-    """Grava itens do catálogo e cria a linha de controlo de cada um.
+    """Grava itens do catálogo e cria a linha de controlo de cada PDM.
 
-    O controlo nasce como 'pendente' e nunca é rebaixado por uma recoleta do
-    catálogo: um item já coletado com sucesso não volta a pendente só porque
+    O controlo é por PDM e não por item: um PDM agrupa itens equivalentes e
+    uma só chamada traz os preços de todos (ver ADR 0005).
+
+    A linha nasce 'pendente' e nunca é rebaixada por uma recoleta do
+    catálogo: um PDM já coletado com sucesso não volta a pendente só porque
     o catálogo foi lido de novo.
     """
     if not registos:
@@ -94,28 +95,35 @@ def guardar_catalogo(conexao: psycopg.Connection, registos: list[RegistoBruto]) 
             """,
             linhas,
         )
+        pdms = {
+            _texto(r.payload["codigoPdm"])
+            for r in registos
+            if r.payload.get("codigoPdm") is not None
+        }
         cur.executemany(
             """
-            insert into raw.controlo_ingestao (codigo_item)
+            insert into raw.controlo_ingestao (codigo_pdm)
             values (%s)
-            on conflict (codigo_item) do nothing
+            on conflict (codigo_pdm) do nothing
             """,
-            [(linha[0],) for linha in linhas],
+            [(pdm,) for pdm in sorted(pdms)],
         )
     return len(linhas)
 
 
-def guardar_precos(
-    conexao: psycopg.Connection, codigo_item: str, registos: list[RegistoBruto]
-) -> int:
-    """Grava preços de um item pela chave natural (idCompra, idItemCompra)."""
+def guardar_precos(conexao: psycopg.Connection, registos: list[RegistoBruto]) -> int:
+    """Grava preços pela chave natural (idCompra, idItemCompra).
+
+    O `codigo_item` vem de cada registo e não do parâmetro da consulta: uma
+    coleta por PDM traz preços de vários itens diferentes.
+    """
     if not registos:
         return 0
     linhas = [
         (
             _texto(r.payload["idCompra"]),
             _texto(r.payload["idItemCompra"]),
-            _texto(codigo_item),
+            _texto(r.payload["codigoItemCatalogo"]),
             json.dumps(r.payload, ensure_ascii=False),
             r.hash_payload,
             r.endpoint,
@@ -141,9 +149,7 @@ def guardar_precos(
     return len(linhas)
 
 
-def marcar_coletado(
-    conexao: psycopg.Connection, codigo_item: str, registos_obtidos: int
-) -> None:
+def marcar_coletado(conexao: psycopg.Connection, codigo_pdm: str, registos_obtidos: int) -> None:
     """Item coletado com sucesso.
 
     Zero registos é 'sem_compras', não falha: metade do catálogo não tem
@@ -156,13 +162,13 @@ def marcar_coletado(
         update raw.controlo_ingestao
            set coletado_em = %s, registos_obtidos = %s, estado = %s,
                erro = null, atualizado_em = now()
-         where codigo_item = %s
+         where codigo_pdm = %s
         """,
-        (datetime.now(UTC), registos_obtidos, estado, _texto(codigo_item)),
+        (datetime.now(UTC), registos_obtidos, estado, _texto(codigo_pdm)),
     )
 
 
-def marcar_falha(conexao: psycopg.Connection, codigo_item: str, erro: str) -> None:
+def marcar_falha(conexao: psycopg.Connection, codigo_pdm: str, erro: str) -> None:
     """Falha registada com o motivo, e o contador de tentativas incrementado.
 
     `coletado_em` NÃO é tocado: a falha não invalida a última coleta boa.
@@ -172,23 +178,23 @@ def marcar_falha(conexao: psycopg.Connection, codigo_item: str, erro: str) -> No
         update raw.controlo_ingestao
            set estado = 'falha', erro = %s,
                tentativas = tentativas + 1, atualizado_em = now()
-         where codigo_item = %s
+         where codigo_pdm = %s
         """,
-        (erro[:500], _texto(codigo_item)),
+        (erro[:500], _texto(codigo_pdm)),
     )
 
 
-def itens_pendentes(
+def pdms_pendentes(
     conexao: psycopg.Connection,
     validade: timedelta = VALIDADE_PADRAO,
     limite: int | None = None,
     forcar: bool = False,
     max_tentativas: int = 3,
 ) -> list[str]:
-    """Itens a coletar nesta execução.
+    """PDMs a coletar nesta execução.
 
     Pendente é o que nunca foi coletado, ou foi há mais do que `validade`.
-    Itens que falharam repetidamente saem da fila: sem esse limite, um item
+    PDMs que falharam repetidamente saem da fila: sem esse limite, um PDM
     que a fonte nunca consegue servir seria repetido em todas as execuções,
     para sempre.
 
@@ -196,15 +202,15 @@ def itens_pendentes(
     recoletar deliberadamente, e é explícita de propósito.
     """
     if forcar:
-        sql = "select codigo_item from raw.controlo_ingestao order by codigo_item"
+        sql = "select codigo_pdm from raw.controlo_ingestao order by codigo_pdm"
         parametros: tuple = ()
     else:
         sql = """
-            select codigo_item
+            select codigo_pdm
               from raw.controlo_ingestao
              where tentativas < %s
                and (coletado_em is null or coletado_em < %s)
-             order by coletado_em nulls first, codigo_item
+             order by coletado_em nulls first, codigo_pdm
         """
         parametros = (max_tentativas, datetime.now(UTC) - validade)
     if limite is not None:
@@ -212,7 +218,7 @@ def itens_pendentes(
         parametros = (*parametros, limite)
     with conexao.cursor() as cur:
         cur.execute(sql, parametros)
-        return [linha["codigo_item"] for linha in cur.fetchall()]
+        return [linha["codigo_pdm"] for linha in cur.fetchall()]
 
 
 def cobertura(conexao: psycopg.Connection) -> Cobertura:

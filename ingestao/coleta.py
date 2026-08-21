@@ -52,9 +52,7 @@ class RegistoBruto:
         )
 
 
-def coletar_catalogo(
-    cliente: Cliente, classe: int = CLASSE_MEDICAMENTOS
-) -> list[RegistoBruto]:
+def coletar_catalogo(cliente: Cliente, classe: int = CLASSE_MEDICAMENTOS) -> list[RegistoBruto]:
     """Todos os itens de uma classe do catálogo.
 
     A API devolve itens de outras classes quando o tamanho de página não é o
@@ -71,11 +69,25 @@ def coletar_catalogo(
     ]
 
 
-def coletar_precos(cliente: Cliente, codigo_item: int | str) -> list[RegistoBruto]:
-    """Todos os preços registados para um item de catálogo.
+def coletar_precos_por_pdm(cliente: Cliente, codigo_pdm: int | str) -> list[RegistoBruto]:
+    """Todos os preços registados para um PDM.
 
-    Metade dos itens não tem compra alguma, e a resposta vazia é informação:
-    devolve lista vazia, e quem chama regista a cobertura.
+    O PDM agrupa itens equivalentes, e a consulta devolve os preços de todos
+    numa só chamada. É a unidade de coleta desde o ADR 0005.
+
+    Boa parte dos PDMs não tem compra alguma, e a resposta vazia é
+    informação: devolve lista vazia, e quem chama regista a cobertura.
+    """
+    parametros = {"tipo": "codigoPdm", "codigo": str(codigo_pdm)}
+    registos = cliente.paginar(CAMINHO_PRECOS, parametros, tamanho_pagina=PAGINA_MAXIMA)
+    return [RegistoBruto.de(CAMINHO_PRECOS, parametros, r) for r in registos]
+
+
+def coletar_precos(cliente: Cliente, codigo_item: int | str) -> list[RegistoBruto]:
+    """Preços de um item de catálogo específico.
+
+    Mantido para os testes de contrato, que comparam a consulta por item com
+    a consulta por PDM. Não é usado no pipeline.
     """
     parametros = {"tipo": "codigoItemCatalogo", "codigo": str(codigo_item)}
     registos = cliente.paginar(CAMINHO_PRECOS, parametros, tamanho_pagina=PAGINA_MAXIMA)

@@ -7,16 +7,30 @@ fora do hook de pre-commit.
 
 import pytest
 from ingestao.cliente import Cliente
-from ingestao.coleta import CLASSE_MEDICAMENTOS, coletar_catalogo, coletar_precos
+from ingestao.coleta import (
+    CLASSE_MEDICAMENTOS,
+    coletar_catalogo,
+    coletar_precos,
+    coletar_precos_por_pdm,
+)
 
 pytestmark = pytest.mark.contrato
 
 # Campos de que a análise depende. Se um destes desaparecer, o estudo quebra.
 CAMPOS_DE_PRECO = {
-    "idCompra", "idItemCompra", "codigoItemCatalogo", "precoUnitario",
-    "quantidade", "dataCompra", "codigoMunicipio", "estado", "esfera",
-    "nomeUnidadeFornecimento", "capacidadeUnidadeFornecimento",
-    "siglaUnidadeMedida", "nomeFornecedor",
+    "idCompra",
+    "idItemCompra",
+    "codigoItemCatalogo",
+    "precoUnitario",
+    "quantidade",
+    "dataCompra",
+    "codigoMunicipio",
+    "estado",
+    "esfera",
+    "nomeUnidadeFornecimento",
+    "capacidadeUnidadeFornecimento",
+    "siglaUnidadeMedida",
+    "nomeFornecedor",
 }
 CAMPOS_DE_CATALOGO = {"codigoItem", "codigoClasse", "descricaoItem", "codigoPdm"}
 
@@ -43,3 +57,15 @@ class TestContratoDosPrecos:
         for r in coletar_precos(Cliente(), 354314):
             codigo = str(r.payload["codigoMunicipio"])
             assert len(codigo) == 7 and codigo.isdigit(), codigo
+
+
+class TestContratoDoPdm:
+    def test_a_consulta_por_pdm_contem_a_consulta_por_item(self):
+        """O pipeline coleta por PDM em vez de por item, o que depende de o
+        PDM devolver um superconjunto. Se a fonte mudar o agrupamento, a
+        cobertura muda sem aviso e este teste apanha (ver ADR 0005)."""
+        chave = lambda r: (str(r.payload["idCompra"]), str(r.payload["idItemCompra"]))  # noqa: E731
+        por_item = {chave(r) for r in coletar_precos(Cliente(), 354314)}
+        por_pdm = {chave(r) for r in coletar_precos_por_pdm(Cliente(), 348)}
+        assert por_item, "item de referência deixou de ter compras"
+        assert por_item <= por_pdm, f"{len(por_item - por_pdm)} registos fora do PDM"

@@ -8,25 +8,39 @@ from ingestao.repositorio import (
     cobertura,
     guardar_catalogo,
     guardar_precos,
-    itens_pendentes,
     marcar_coletado,
     marcar_falha,
+    pdms_pendentes,
 )
 
 pytestmark = pytest.mark.postgres
 
 
-def item(codigo: int, descricao: str = "MEDICAMENTO X") -> RegistoBruto:
+def item(codigo: int, descricao: str = "MEDICAMENTO X", pdm: int | None = None) -> RegistoBruto:
+    """Item de catálogo. O PDM defaulta ao próprio código, para os testes que
+    não se importam com o agrupamento continuarem legíveis."""
     return RegistoBruto.de(
-        "/catalogo", {}, {"codigoItem": codigo, "codigoClasse": 6505,
-                          "descricaoItem": descricao}
+        "/catalogo",
+        {},
+        {
+            "codigoItem": codigo,
+            "codigoClasse": 6505,
+            "descricaoItem": descricao,
+            "codigoPdm": pdm if pdm is not None else codigo,
+        },
     )
 
 
-def preco(id_compra: str, id_item: str, valor: float = 1.0) -> RegistoBruto:
+def preco(id_compra: str, id_item: str, valor: float = 1.0, codigo_item: int = 1) -> RegistoBruto:
     return RegistoBruto.de(
-        "/precos", {}, {"idCompra": id_compra, "idItemCompra": id_item,
-                        "precoUnitario": valor}
+        "/precos",
+        {},
+        {
+            "idCompra": id_compra,
+            "idItemCompra": id_item,
+            "precoUnitario": valor,
+            "codigoItemCatalogo": codigo_item,
+        },
     )
 
 
@@ -45,8 +59,8 @@ class TestIdempotencia:
     def test_precos_repetidos_nao_duplicam(self, conexao):
         """A chave natural é (idCompra, idItemCompra)."""
         guardar_catalogo(conexao, [item(1)])
-        guardar_precos(conexao, "1", [preco("C1", "I1"), preco("C1", "I2")])
-        guardar_precos(conexao, "1", [preco("C1", "I1"), preco("C1", "I2")])
+        guardar_precos(conexao, [preco("C1", "I1"), preco("C1", "I2")])
+        guardar_precos(conexao, [preco("C1", "I1"), preco("C1", "I2")])
         assert conexao.execute("select count(*) c from raw.precos").fetchone()["c"] == 2
 
     def test_recoletar_catalogo_nao_rebaixa_item_ja_coletado(self, conexao):
@@ -54,8 +68,7 @@ class TestIdempotencia:
         guardar_catalogo(conexao, [item(1)])
         marcar_coletado(conexao, "1", registos_obtidos=5)
         guardar_catalogo(conexao, [item(1)])
-        estado = conexao.execute(
-            "select estado from raw.controlo_ingestao").fetchone()["estado"]
+        estado = conexao.execute("select estado from raw.controlo_ingestao").fetchone()["estado"]
         assert estado == "sucesso"
 
 
@@ -65,15 +78,18 @@ class TestEstadoDaColeta:
         pipeline repetir eternamente itens que nunca terão dados."""
         guardar_catalogo(conexao, [item(1)])
         marcar_coletado(conexao, "1", registos_obtidos=0)
-        assert conexao.execute(
-            "select estado from raw.controlo_ingestao").fetchone()["estado"] == "sem_compras"
+        assert (
+            conexao.execute("select estado from raw.controlo_ingestao").fetchone()["estado"]
+            == "sem_compras"
+        )
 
     def test_falha_nao_apaga_a_ultima_coleta_boa(self, conexao):
         guardar_catalogo(conexao, [item(1)])
         marcar_coletado(conexao, "1", registos_obtidos=3)
         marcar_falha(conexao, "1", "503 da fonte")
         linha = conexao.execute(
-            "select coletado_em, estado, tentativas from raw.controlo_ingestao").fetchone()
+            "select coletado_em, estado, tentativas from raw.controlo_ingestao"
+        ).fetchone()
         assert linha["coletado_em"] is not None
         assert linha["estado"] == "falha"
         assert linha["tentativas"] == 1
@@ -82,19 +98,20 @@ class TestEstadoDaColeta:
         guardar_catalogo(conexao, [item(1)])
         marcar_falha(conexao, "1", "erro")
         marcar_falha(conexao, "1", "erro")
-        assert conexao.execute(
-            "select tentativas t from raw.controlo_ingestao").fetchone()["t"] == 2
+        assert (
+            conexao.execute("select tentativas t from raw.controlo_ingestao").fetchone()["t"] == 2
+        )
 
 
 class TestRetomada:
     def test_item_nunca_coletado_esta_pendente(self, conexao):
         guardar_catalogo(conexao, [item(1), item(2)])
-        assert set(itens_pendentes(conexao)) == {"1", "2"}
+        assert set(pdms_pendentes(conexao)) == {"1", "2"}
 
     def test_item_coletado_agora_sai_da_fila(self, conexao):
         guardar_catalogo(conexao, [item(1), item(2)])
         marcar_coletado(conexao, "1", 5)
-        assert itens_pendentes(conexao) == ["2"]
+        assert pdms_pendentes(conexao) == ["2"]
 
     def test_coleta_antiga_volta_a_ficar_pendente(self, conexao):
         """A fonte atualiza continuamente. Sem validade, o estudo congelaria
@@ -104,8 +121,8 @@ class TestRetomada:
             "update raw.controlo_ingestao set coletado_em = %s, estado = 'sucesso'",
             (datetime.now(UTC) - timedelta(days=30),),
         )
-        assert itens_pendentes(conexao, validade=timedelta(days=7)) == ["1"]
-        assert itens_pendentes(conexao, validade=timedelta(days=60)) == []
+        assert pdms_pendentes(conexao, validade=timedelta(days=7)) == ["1"]
+        assert pdms_pendentes(conexao, validade=timedelta(days=60)) == []
 
     def test_item_que_falha_sempre_sai_da_fila(self, conexao):
         """Sem teto de tentativas, um item que a fonte nunca serve seria
@@ -113,27 +130,27 @@ class TestRetomada:
         guardar_catalogo(conexao, [item(1)])
         for _ in range(3):
             marcar_falha(conexao, "1", "erro")
-        assert itens_pendentes(conexao, max_tentativas=3) == []
-        assert itens_pendentes(conexao, max_tentativas=99) == ["1"]
+        assert pdms_pendentes(conexao, max_tentativas=3) == []
+        assert pdms_pendentes(conexao, max_tentativas=99) == ["1"]
 
     def test_forcar_devolve_tudo(self, conexao):
         guardar_catalogo(conexao, [item(1), item(2)])
         marcar_coletado(conexao, "1", 5)
         marcar_coletado(conexao, "2", 0)
-        assert set(itens_pendentes(conexao, forcar=True)) == {"1", "2"}
+        assert set(pdms_pendentes(conexao, forcar=True)) == {"1", "2"}
 
     def test_limite_recorta_a_fila(self, conexao):
         guardar_catalogo(conexao, [item(n) for n in range(1, 6)])
-        assert len(itens_pendentes(conexao, limite=2)) == 2
+        assert len(pdms_pendentes(conexao, limite=2)) == 2
 
     def test_nunca_coletados_vem_primeiro(self, conexao):
         """Numa execução limitada, prioriza quem nunca teve dado nenhum."""
         guardar_catalogo(conexao, [item(1), item(2)])
         conexao.execute(
-            "update raw.controlo_ingestao set coletado_em = %s where codigo_item = '1'",
+            "update raw.controlo_ingestao set coletado_em = %s where codigo_pdm = '1'",
             (datetime.now(UTC) - timedelta(days=30),),
         )
-        assert itens_pendentes(conexao, limite=1) == ["2"]
+        assert pdms_pendentes(conexao, limite=1) == ["2"]
 
 
 class TestCobertura:
