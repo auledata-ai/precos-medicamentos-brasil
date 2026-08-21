@@ -30,4 +30,7 @@ ignore = ["N818"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-markers = ["contrato: testes que batem na API real e verificam o contrato da fonte"]
+markers = [
+    "contrato: testes que batem na API real e verificam o contrato da fonte",
+    "postgres: testes que precisam do Postgres do docker compose a correr",
+]
