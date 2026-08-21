@@ -1,4 +1,19 @@
 {
+  "exemplo_concreto": {
+    "remedio": "Dipirona Sódica",
+    "unidade": "comprimido",
+    "ano": 2025,
+    "compras": 460,
+    "estados": 27,
+    "compradores": 381,
+    "fornecedores": 169,
+    "preco_barato": 0.1133,
+    "preco_mediano": 0.13,
+    "preco_caro": 0.17,
+    "quantidade_referencia": 1000000,
+    "diferenca_na_quantidade": 56700.0,
+    "quanto_mais_caro": 50.0
+  },
   "histograma_dispersao": {
     "barras": [
       {
@@ -87,17 +102,17 @@
   "assinatura_quantidade_um": {
     "barras": [
       {
-        "faixa": "1.000x ou mais",
+        "faixa": "1.000x acima do normal",
         "registros": 288,
         "porcentagem": 70.8
       },
       {
-        "faixa": "100x a 1.000x",
+        "faixa": "100x a 1.000x acima",
         "registros": 1340,
         "porcentagem": 11.6
       },
       {
-        "faixa": "10x a 100x",
+        "faixa": "10x a 100x acima",
         "registros": 6144,
         "porcentagem": 3.6
       }

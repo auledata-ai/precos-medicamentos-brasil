@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="pt-BR">
 <meta charset="utf-8">
-<title>Preços de medicamentos: os três achados</title>
+<title>O mesmo remédio custa o mesmo em todo o Brasil?</title>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
@@ -53,6 +53,25 @@
             font-weight: 700; letter-spacing: -.02em; }
   .kpi .q { font-size: 12px; color: var(--ink-3); margin-top: 4px; line-height: 1.4; }
 
+  .fonte .explica { margin-top: 14px; display: flex; gap: 26px; }
+  .fonte .explica p { flex: 1; font-size: 13.5px; color: var(--ink-2); line-height: 1.6; }
+  .fonte .explica b { color: var(--ink); font-weight: 600; }
+  .fecho .explica { margin-top: 14px; display: flex; gap: 26px; }
+  .fecho .explica p { flex: 1; font-size: 13.5px; color: var(--ink-2); line-height: 1.6; }
+  .fecho .explica b { color: var(--ink); font-weight: 600; }
+  .fecho.ressalva { border-left: 3px solid var(--amber); }
+
+  /* Escada de preços: três degraus, do barato ao caro, sem eixo nem grelha.
+     Não é um gráfico, é uma comparação de três valores. */
+  .escada { display: flex; gap: 14px; margin-top: 22px; align-items: flex-end; }
+  .degrau { flex: 1; background: rgba(255,255,255,.03); border-radius: 10px;
+            padding: 16px 18px; border-bottom: 3px solid var(--apagado); }
+  .degrau.meio { border-bottom-color: var(--cyan); }
+  .degrau.caro { border-bottom-color: var(--blue); }
+  .degrau .preco { font-family: "JetBrains Mono", monospace; font-size: 30px;
+                   font-weight: 700; letter-spacing: -.02em; }
+  .degrau .quem { font-size: 12.5px; color: var(--ink-3); margin-top: 5px; line-height: 1.45; }
+
   .nota { margin-top: 16px; font-size: 12.5px; color: var(--ink-3); line-height: 1.5; }
   .nota b { color: var(--amber); font-weight: 600; }
 
@@ -65,15 +84,47 @@
   td:first-child, th:first-child { text-align: left; }
 </style>
 
-<div class="eyebrow">Aule Data / compras.gov.br / 2021 a 2026</div>
-<h1>Preços de medicamentos em compras públicas</h1>
-<div class="lede">563.881 registros comparáveis. Três achados que se contradizem, e é aí que está o estudo.</div>
+<div class="eyebrow">Aule Data / estudo com dados abertos</div>
+<h1>O mesmo remédio custa o mesmo em todo o Brasil?</h1>
+<div class="lede">
+  Hospitais, prefeituras e secretarias compram os mesmos medicamentos, separadamente,
+  cada um com seu processo. Este estudo compara o preço que cada um pagou.
+</div>
+
+<section class="fonte">
+  <h2>De onde vêm estes dados</h2>
+  <div class="explica">
+    <p>
+      Toda compra do governo federal, estadual e municipal feita por pregão fica
+      registrada no <b>Compras.gov.br</b>, o sistema oficial de compras públicas.
+      É informação pública e aberta, sem senha.
+    </p>
+    <p>
+      Baixamos <b>572 mil registros de compras de medicamentos</b> entre 2021 e 2026.
+      Cada registro diz: qual remédio, qual embalagem, quantas unidades, quanto custou
+      cada uma, quem comprou, de quem comprou e quando.
+    </p>
+    <p>
+      Comparar preço só faz sentido entre coisas iguais. Então cada preço só é
+      comparado com o <b>mesmo remédio, na mesma embalagem, no mesmo ano</b>. Um frasco
+      de 100 ml nunca é comparado com um de 1 litro.
+    </p>
+  </div>
+</section>
+
+<section id="exemplo">
+  <h2>Um exemplo, para começar pelo concreto</h2>
+  <div class="sub" id="exemplo-sub"></div>
+  <div class="escada" id="exemplo-escada"></div>
+  <div class="nota" id="exemplo-nota"></div>
+</section>
 
 <section>
-  <h2>1. No mercado comum, a dispersão é modesta</h2>
+  <h2>Achado 1: a diferença de preço é menor do que se imagina</h2>
   <div class="sub">
-    Razão entre o percentil 75 e o 25 do preço, dentro do mesmo produto, mesmo
-    tamanho de embalagem e mesmo ano. Grupos com pelo menos 30 registros.
+    Para cada remédio, medimos quanto o comprador caro pagou a mais que o barato.
+    Cada barra conta quantos remédios ficaram naquela faixa de diferença.
+    <b>1,5x significa que o caro pagou 50% a mais.</b>
   </div>
   <svg id="g1" width="1092" height="290" role="img"
        aria-label="Histograma da dispersão de preço por grupo"></svg>
@@ -82,10 +133,11 @@
 </section>
 
 <section>
-  <h2>2. A cauda absurda é padrão de registro, não preço</h2>
+  <h2>Achado 2: os preços absurdos são erro de digitação</h2>
   <div class="sub">
-    Porcentagem de compras com quantidade igual a 1, por quanto o preço excede
-    a mediana do próprio grupo. A linha marca a taxa na base inteira.
+    Aparecem na base compras como sinvastatina a R$ 750.000 <b>o comprimido</b>.
+    Não é um comprimido caro: é a compra inteira lançada como se fosse uma unidade.
+    O gráfico mostra a prova, a seguir explicada.
   </div>
   <svg id="g2" width="1092" height="230" role="img"
        aria-label="Porcentagem com quantidade um por faixa de exagero"></svg>
@@ -94,10 +146,10 @@
 </section>
 
 <section>
-  <h2>3. O dinheiro não está nos absurdos</h2>
+  <h2>Achado 3: o dinheiro está nas compras comuns</h2>
   <div class="sub">
-    Quanto do gasto ficou acima da mediana do próprio grupo, removendo
-    progressivamente os valores extremos.
+    Se todo comprador tivesse pago o preço do meio, quanto se teria gasto a menos?
+    E essa conta muda se tirarmos os absurdos do achado 2?
   </div>
   <div class="kpis" id="k3"></div>
   <div class="nota" id="n3"></div>
@@ -117,6 +169,46 @@ const [graficos, resultados] = await Promise.all([
   fetch("./dados/graficos.json").then(r => r.json()),
   fetch("./dados/resultados.json").then(r => r.json()),
 ]);
+
+/* --- exemplo concreto: o leitor precisa de algo tangível antes da estatística --- */
+{
+  const e = graficos.exemplo_concreto;
+  const secao = document.getElementById("exemplo");
+  if (!e) {
+    secao.remove();   // Sem exemplo, some a secção. Nunca inventar um.
+  } else {
+    const reais = v => "R$ " + v.toLocaleString("pt-BR",
+      {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    const centavos = v => "R$ " + v.toLocaleString("pt-BR",
+      {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+    document.getElementById("exemplo-sub").innerHTML =
+      `${e.remedio}, ${e.unidade}. Em ${e.ano} houve <b>${num(e.compras)} compras</b> ` +
+      `deste mesmo item, por <b>${num(e.compradores)} órgãos</b> em ` +
+      `<b>${e.estados} estados</b>, de ${num(e.fornecedores)} fornecedores diferentes.`;
+
+    document.getElementById("exemplo-escada").innerHTML = `
+      <div class="degrau">
+        <div class="preco">${centavos(e.preco_barato)}</div>
+        <div class="quem">o quarto que pagou <b>menos</b><br>por comprimido</div>
+      </div>
+      <div class="degrau meio">
+        <div class="preco">${centavos(e.preco_mediano)}</div>
+        <div class="quem">o preço <b>do meio</b><br>metade pagou mais, metade menos</div>
+      </div>
+      <div class="degrau caro">
+        <div class="preco">${centavos(e.preco_caro)}</div>
+        <div class="quem">o quarto que pagou <b>mais</b><br>por comprimido</div>
+      </div>`;
+
+    document.getElementById("exemplo-nota").innerHTML =
+      `São centavos, mas a compra é grande. Quem pagou o preço caro gastou ` +
+      `<b>${e.quanto_mais_caro}% a mais</b> que quem pagou o barato: em ` +
+      `${num(e.quantidade_referencia)} comprimidos, uma diferença de ` +
+      `<b>${reais(e.diferenca_na_quantidade)}</b>. Este estudo mede essa diferença ` +
+      `para 4.293 remédios de uma vez.`;
+  }
+}
 
 /* --- 1. histograma, ênfase: o miolo em cor, a cauda em cinza de contexto --- */
 {
@@ -164,9 +256,10 @@ const [graficos, resultados] = await Promise.all([
   });
 
   document.getElementById("n1").innerHTML =
-    `<b>${pct(d.porcentagem_ate_1_75)}% dos ${num(d.total_grupos)} grupos</b> ficam abaixo de 1,75x. ` +
-    `No grupo típico uma compra cara custa 42% mais que uma barata, o que é compatível ` +
-    `com prazo de entrega, quantidade mínima e logística.`;
+    `Em <b>${pct(d.porcentagem_ate_1_75)}% dos ${num(d.total_grupos)} remédios</b> analisados, ` +
+    `o comprador caro pagou menos de 75% a mais que o barato. No caso típico, 42% a mais. ` +
+    `Isso é diferença normal de mercado: quem compra com urgência, em quantidade pequena, ` +
+    `ou para um município distante, paga mais, e isso não indica nada de errado.`;
   document.getElementById("t1").innerHTML =
     "<tr><th>razão</th><th>grupos</th></tr>" +
     d.barras.map(b => `<tr><td>${b.rotulo}x</td><td>${num(b.grupos)}</td></tr>`).join("");
@@ -210,10 +303,11 @@ const [graficos, resultados] = await Promise.all([
   svg.appendChild(rt);
 
   document.getElementById("n2").innerHTML =
-    `Quantidade 1 aparece em <b>${d.base.toLocaleString("pt-BR")}% da base</b> e em ` +
-    `<b>${pct(d.barras[0].porcentagem)}% dos registros mais absurdos</b>: concentração de ` +
-    `${d.concentracao}x. É a assinatura da compra inteira lançada como uma unidade só. ` +
-    `Sinvastatina a R$ 750.000 não é um comprimido caro.`;
+    `A prova está na quantidade declarada. Numa compra normal, o órgão registra ` +
+    `milhares de comprimidos: <b>quantidade 1 aparece em só ${d.base.toLocaleString("pt-BR")}% ` +
+    `da base</b>. Mas entre os preços mais absurdos, <b>${pct(d.barras[0].porcentagem)}% têm ` +
+    `quantidade 1</b>, ${d.concentracao} vezes mais que o normal. Quem digitou lançou o valor ` +
+    `total do contrato no campo do preço unitário, e deixou a quantidade em 1.`;
   document.getElementById("t2").innerHTML =
     "<tr><th>faixa</th><th>registros</th><th>com quantidade 1</th></tr>" +
     d.barras.map(b => `<tr><td>${b.faixa}</td><td>${num(b.registros)}</td><td>${pct(b.porcentagem)}%</td></tr>`).join("");
@@ -223,23 +317,67 @@ const [graficos, resultados] = await Promise.all([
 {
   const a = resultados.agregado;
   const cenarios = [
-    ["todos", "todos os registros"],
-    ["sem_extremos", "sem os acima de 1.000x a mediana"],
-    ["sem_altos", "sem os acima de 100x a mediana"],
+    ["todos", "considerando todas as compras"],
+    ["sem_extremos", "tirando os preços 1.000x acima do normal"],
+    ["sem_altos", "tirando os preços 100x acima do normal"],
   ];
   document.getElementById("k3").innerHTML = cenarios.map(([chave, nome]) => `
     <div class="kpi">
       <div class="n">${a[chave].porcentagem_acima.toLocaleString("pt-BR", {minimumFractionDigits: 2})}%</div>
-      <div class="q">${nome}<br>R$ ${(a[chave].acima_da_mediana / 1e9).toFixed(2).replace(".", ",")} bi acima da mediana</div>
+      <div class="q">do gasto ficou acima do preço do meio<br>${nome}<br>
+        <span style="color:var(--ink-2)">R$ ${(a[chave].acima_da_mediana / 1e9).toFixed(2).replace(".", ",")} bilhões</span></div>
     </div>`).join("");
 
   const delta = (a.todos.porcentagem_acima - a.sem_altos.porcentagem_acima).toFixed(2);
   document.getElementById("n3").innerHTML =
-    `Remover tudo acima de 100 vezes a mediana move o resultado em ` +
-    `<b>${delta.replace(".", ",")} ponto percentual</b>. A diferença vem do meio da ` +
-    `distribuição, não das pontas. Caçar os escândalos é caçar erro de digitação.`;
+    `Os três números são praticamente iguais: tirar todos os absurdos muda o resultado ` +
+    `em <b>${delta.replace(".", ",")} ponto percentual</b>. Ou seja, o dinheiro não está nos ` +
+    `casos escandalosos, que são poucos e são erro de digitação. Está espalhado por ` +
+    `milhares de compras comuns, onde um órgão pagou um pouco mais que o outro pelo ` +
+    `mesmo remédio. <b>Caçar escândalo é caçar erro de digitação.</b>`;
 }
 </script>
+
+<section class="fecho">
+  <h2>Para que isto serve</h2>
+  <div class="explica">
+    <p>
+      <b>Para quem compra.</b> Um órgão consegue ver o que outros pagaram pelo mesmo
+      item, no mesmo ano, antes de abrir um pregão. A referência já existe, está
+      pública, e quase ninguém usa.
+    </p>
+    <p>
+      <b>Para quem fiscaliza.</b> A lista de compras muito acima da referência reduz
+      564 mil registros a 7.772 que uma pessoa consegue olhar, com comprador,
+      fornecedor, data e quantidade ao lado.
+    </p>
+    <p>
+      <b>Para quem estuda dado público.</b> Boa parte do que parece escândalo é
+      preenchimento errado. Um estudo que não separa as duas coisas produz manchete,
+      não conhecimento.
+    </p>
+  </div>
+</section>
+
+<section class="fecho ressalva">
+  <h2>O que estes números não dizem</h2>
+  <div class="explica">
+    <p>
+      <b>Não são prejuízo.</b> Medem distância a uma referência interna, o preço do
+      meio. Pagar acima dele tem explicação legítima: urgência, quantidade mínima,
+      entrega em local distante.
+    </p>
+    <p>
+      <b>Não apontam fraude.</b> Preço alto é uma pergunta, não uma resposta. Nenhum
+      caso desta base foi verificado individualmente, e nenhum órgão é nomeado aqui.
+    </p>
+    <p>
+      <b>Não cobrem tudo.</b> Só entram remédios com pelo menos 30 compras comparáveis
+      no mesmo ano: 4.293 de 43.895 grupos. Os outros não têm base de comparação, e
+      inventá-la seria pior que admitir a lacuna.
+    </p>
+  </div>
+</section>
 
 <footer style="margin-top:38px;padding-top:20px;border-top:1px solid var(--grelha);
                font-size:12.5px;color:var(--ink-3);line-height:1.6">
