@@ -1,0 +1,30 @@
+version: 2
+
+models:
+  - name: mart_precos
+    description: >
+      Base limpa da analise: o staging menos o que a quarentena excluiu.
+    columns:
+      - name: preco_unitario
+        data_tests: [not_null]
+      - name: data_compra
+        data_tests: [not_null]
+      - name: grupo_comparavel
+        data_tests: [not_null]
+  - name: mart_dispersao_grupo
+    description: >
+      Dispersao de preco por grupo comparavel e ano. `amostra_suficiente`
+      marca os grupos com pelo menos 30 registros.
+    columns:
+      - name: mediana
+        data_tests: [not_null]
+      - name: n_registros
+        data_tests: [not_null]
+
+  - name: mart_compras_atipicas
+    description: >
+      Compras a partir de 10x a mediana do proprio grupo no mesmo ano. Nao
+      e uma acusacao: e uma lista curta que vale a pena olhar.
+    columns:
+      - name: razao_mediana
+        data_tests: [not_null]

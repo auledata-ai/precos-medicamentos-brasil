@@ -1,0 +1,8 @@
+# Dependencias que a DAG e os modulos de ingestao precisam dentro do container.
+# Mantidas em arquivo proprio, e nao no pyproject, porque a imagem do Airflow
+# ja traz um conjunto vasto de pacotes com versoes fixadas por constraint: um
+# `uv sync` completo aqui arriscaria conflito com essa resolucao.
+requests>=2.32
+pandas>=2.2
+pyarrow>=16
+psycopg[binary]>=3.2

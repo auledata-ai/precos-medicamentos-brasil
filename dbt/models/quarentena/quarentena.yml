@@ -1,0 +1,18 @@
+version: 2
+
+models:
+  - name: quarentena_precos
+    description: >
+      Registros excluidos da analise, com todos os motivos de cada um.
+    columns:
+      - name: motivos
+        data_tests: [not_null]
+      - name: n_motivos
+        data_tests: [not_null]
+
+  - name: quarentena_resumo
+    description: >
+      Contagem e porcentagem por motivo. Publicavel tal e qual.
+    columns:
+      - name: motivo
+        data_tests: [not_null, unique]

@@ -21,6 +21,9 @@ standalone_admin_password.txt
 
 # Dados: grandes e reobtiveis pelo pipeline
 dados/*
+# Excecao: os numeros publicados sao versionados de proposito, para que
+# uma alteracao num numero apareca em revisao e nao passe despercebida.
+!dados/resultados.json
 !dados/.gitkeep
 
 # dbt
@@ -28,9 +31,11 @@ dbt/target/
 dbt/dbt_packages/
 dbt/logs/
 
-# Local env / secrets
+# Local env / secrets. O .env.example e o modelo e tem de ser versionado:
+# sem ele ninguem sabe que variaveis o projeto precisa.
 .env
 .env.*
+!.env.example
 
 # Editores
 .idea/
@@ -39,3 +44,4 @@ dbt/logs/
 
 # OS
 .DS_Store
+dbt/.user.yml

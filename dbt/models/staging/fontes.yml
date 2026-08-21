@@ -1,0 +1,17 @@
+version: 2
+
+sources:
+  - name: raw
+    schema: raw
+    description: >
+      Resposta da API do Compras.gov.br como veio, em jsonb, com a
+      proveniencia ao lado. Nenhuma transformacao acontece aqui.
+    tables:
+      - name: catalogo
+        columns:
+          - name: codigo_item
+            tests: [unique, not_null]
+      - name: precos
+        description: Um registro por item de compra, chave (id_compra, id_item_compra).
+      - name: controle_ingestao
+        description: Estado da coleta por item. Sustenta a cobertura publicada.

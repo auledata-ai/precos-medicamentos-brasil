@@ -1,0 +1,84 @@
+{
+  "cobertura": {
+    "registros": 563881,
+    "compras": 44354,
+    "fornecedores": 7157,
+    "municipios": 965,
+    "primeiro_dia": "2020-12-24",
+    "ultimo_dia": "2026-07-24"
+  },
+  "quarentena": {
+    "registros_excluidos": 8671,
+    "registros_analisados": 563881,
+    "porcentagem_excluida": 1.5144,
+    "por_motivo": [
+      {
+        "motivo": "sem_unidade_de_fornecimento",
+        "registros": 8450,
+        "porcentagem_do_total": 1.4758
+      },
+      {
+        "motivo": "sem_data_de_compra",
+        "registros": 202,
+        "porcentagem_do_total": 0.0353
+      },
+      {
+        "motivo": "quantidade_invalida",
+        "registros": 22,
+        "porcentagem_do_total": 0.0038
+      },
+      {
+        "motivo": "preco_nao_positivo",
+        "registros": 3,
+        "porcentagem_do_total": 0.0005
+      }
+    ]
+  },
+  "dispersao_tipica": {
+    "grupos": 4293,
+    "q1": 1.2708933717579252,
+    "mediana": 1.421978021978022,
+    "q3": 1.6842105263157896,
+    "p90": 2.2222222222222223
+  },
+  "cauda_extrema": {
+    "por_faixa": {
+      "moderada": {
+        "registros": 6144,
+        "com_quantidade_um": 221,
+        "porcentagem_com_quantidade_um": 3.6
+      },
+      "extrema": {
+        "registros": 288,
+        "com_quantidade_um": 204,
+        "porcentagem_com_quantidade_um": 70.8
+      },
+      "alta": {
+        "registros": 1340,
+        "com_quantidade_um": 155,
+        "porcentagem_com_quantidade_um": 11.6
+      }
+    },
+    "porcentagem_com_quantidade_um_na_base": 0.496
+  },
+  "agregado": {
+    "todos": {
+      "registros": 392137,
+      "gasto": 45597417929.37,
+      "acima_da_mediana": 2341630808.84,
+      "porcentagem_acima": 5.14
+    },
+    "sem_extremos": {
+      "registros": 391849,
+      "gasto": 45553866637.66,
+      "acima_da_mediana": 2298087455.61,
+      "porcentagem_acima": 5.04
+    },
+    "sem_altos": {
+      "registros": 390509,
+      "gasto": 45524704607.82,
+      "acima_da_mediana": 2269122297.99,
+      "porcentagem_acima": 4.98
+    }
+  }
+}
