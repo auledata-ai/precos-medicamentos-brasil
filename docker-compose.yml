@@ -21,11 +21,26 @@ x-airflow-comum: &airflow-comum
     PYTHONPATH: /opt/airflow/projeto
     # A DAG liga ao mesmo Postgres, pelo nome do servico na rede do compose.
     POSTGRES_DSN: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+    # O dbt le as credenciais do ambiente, pelo profiles.yml. Dentro da rede
+    # do compose o servidor e `postgres` na porta interna, nao o mapeamento
+    # 5433 que so existe no host.
+    POSTGRES_HOST: postgres
+    POSTGRES_PORT: "5432"
+    DBT_PROFILES_DIR: /opt/airflow/projeto/dbt
+    # O `profiles.yml` le estas tres pelo nome, e nao o DSN inteiro. Vem
+    # todas do mesmo `.env`, por isso continuam a ter uma unica origem.
+    POSTGRES_USER: ${POSTGRES_USER}
+    POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    POSTGRES_DB: ${POSTGRES_DB}
   volumes:
     - ./dags:/opt/airflow/dags
     - ./plugins:/opt/airflow/plugins
     - ./logs:/opt/airflow/logs
     - ./ingestao:/opt/airflow/projeto/ingestao
+    - ./analise:/opt/airflow/projeto/analise
+    - ./dbt:/opt/airflow/projeto/dbt
+    # Os numeros publicados sao escritos pela DAG e lidos pelo repositorio.
+    - ./docs/dados:/opt/airflow/projeto/docs/dados
     - ./dados:/opt/airflow/dados
   user: "${AIRFLOW_UID}:0"
   depends_on:

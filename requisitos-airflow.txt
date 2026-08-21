@@ -6,3 +6,7 @@ requests>=2.32
 pandas>=2.2
 pyarrow>=16
 psycopg[binary]>=3.2
+
+# A transformacao corre como task, e nao a mao no host: sem isto o pipeline
+# so vai ate a ingestao e o resto depende de alguem lembrar-se.
+dbt-postgres>=1.8
