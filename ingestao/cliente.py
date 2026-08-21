@@ -42,11 +42,17 @@ class FonteIndisponivel(RuntimeError):
 class Politica:
     """Parâmetros de resiliência. Sem valores mágicos espalhados no código."""
 
-    tentativas: int = 4
+    tentativas: int = 5
     espera_inicial: float = 1.0
-    espera_maxima: float = 30.0
+    # 60s e nao 30s: a fonte pede 42s de espera no 429, e um teto abaixo disso
+    # fazia-nos voltar sempre cedo demais e queimar as tentativas contra uma
+    # porta fechada. Foi a causa de 14% de falhas na primeira coleta completa.
+    espera_maxima: float = 60.0
     timeout: float = 120.0
-    intervalo_minimo: float = 0.35  # ~3 chamadas por segundo, no maximo
+    # O limite da fonte e de concorrencia, nao de taxa sustentada: sequencial
+    # a 0,5s passa sem problema, mas oito pedidos simultaneos bloqueiam de
+    # imediato. Medido contra a API real.
+    intervalo_minimo: float = 0.5
     # 429 e 5xx sao transitorios. 4xx (exceto 429) e erro nosso e nao repete.
     codigos_repetiveis: tuple[int, ...] = (429, 500, 502, 503, 504)
 
@@ -69,15 +75,31 @@ class Cliente:
             time.sleep(self.politica.intervalo_minimo - decorrido)
         self._ultima_chamada = time.monotonic()
 
+    @staticmethod
+    def _retry_after(resposta: requests.Response) -> float | None:
+        """Espera pedida pela fonte, quando ela a indica.
+
+        A API devolve `Retry-After: 42` no 429. Ignorar esse valor e usar
+        apenas recuo exponencial faz-nos voltar antes do permitido, o que
+        gasta tentativas sem nunca conseguir passar.
+        """
+        cabecalho = resposta.headers.get("Retry-After")
+        if not cabecalho:
+            return None
+        try:
+            return float(cabecalho)
+        except ValueError:
+            # A norma permite data HTTP em vez de segundos. Nao vale a pena
+            # interpreta-la: caimos no recuo exponencial.
+            return None
+
     def _espera_do_recuo(self, tentativa: int) -> float:
         """Recuo exponencial com jitter.
 
         O jitter evita que várias execuções que falharam ao mesmo tempo
         voltem todas em sincronia e derrubem a fonte de novo.
         """
-        base = min(
-            self.politica.espera_inicial * (2**tentativa), self.politica.espera_maxima
-        )
+        base = min(self.politica.espera_inicial * (2**tentativa), self.politica.espera_maxima)
         return base * (0.5 + random.random() / 2)  # noqa: S311 - jitter, nao cripto
 
     def obter(self, caminho: str, parametros: dict[str, Any]) -> dict:
@@ -88,9 +110,7 @@ class Cliente:
         for tentativa in range(self.politica.tentativas):
             self._aguardar_vez()
             try:
-                resposta = self.sessao.get(
-                    url, params=parametros, timeout=self.politica.timeout
-                )
+                resposta = self.sessao.get(url, params=parametros, timeout=self.politica.timeout)
             except requests.RequestException as exc:
                 ultimo_erro = exc
                 logger.warning("falha de rede em %s: %s", caminho, exc)
@@ -100,16 +120,20 @@ class Cliente:
                 if resposta.status_code not in self.politica.codigos_repetiveis:
                     # 4xx nao transitorio: repetir nao ajuda e esconde o defeito.
                     raise ErroDaFonte(
-                        f"{caminho} devolveu {resposta.status_code}: "
-                        f"{resposta.text[:200]}"
+                        f"{caminho} devolveu {resposta.status_code}: {resposta.text[:200]}"
                     )
                 ultimo_erro = ErroDaFonte(f"{caminho} devolveu {resposta.status_code}")
+                pedida = self._retry_after(resposta)
                 logger.warning(
-                    "resposta %s em %s, tentativa %d",
+                    "resposta %s em %s, tentativa %d, retry-after %s",
                     resposta.status_code,
                     caminho,
                     tentativa + 1,
+                    pedida,
                 )
+                if pedida is not None and tentativa < self.politica.tentativas - 1:
+                    time.sleep(pedida)
+                    continue
 
             if tentativa < self.politica.tentativas - 1:
                 time.sleep(self._espera_do_recuo(tentativa))
