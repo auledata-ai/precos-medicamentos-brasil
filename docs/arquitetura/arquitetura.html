@@ -1,0 +1,194 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Arquitetura</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  /* Tokens lidos de aulesite/app/globals.css. Cor nova nao entra aqui. */
+  :root {
+    --midnight: #05070f;
+    --navy:     #0d1530;
+    --indigo:   #6366f1;
+    --blue:     #2563eb;
+    --cyan:     #0891b2;
+    --amber:    #e9a23b;
+    --white:    #ffffff;
+    --surface:  #f7f8fa;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    width: 1600px;
+    background: var(--midnight);
+    font-family: Archivo, system-ui, sans-serif;
+    color: var(--white);
+    padding: 52px 60px 46px;
+    display: flex; flex-direction: column;
+  }
+  .eyebrow {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 13px; letter-spacing: .18em; text-transform: uppercase;
+    color: var(--cyan); margin-bottom: 10px;
+  }
+  h1 { font-size: 40px; font-weight: 700; letter-spacing: -.02em; }
+  .sub { font-size: 17px; color: #9fb0cc; margin-top: 8px; }
+
+  .fluxo { display: flex; gap: 14px; align-items: stretch; margin-top: 38px; }
+  .col { flex: 1; display: flex; flex-direction: column; }
+
+  .fase {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px; letter-spacing: .16em; text-transform: uppercase;
+    color: #6f83a6; margin-bottom: 10px; height: 16px;
+  }
+  .caixa {
+    background: var(--navy);
+    border: 1px solid rgba(255,255,255,.09);
+    border-top: 3px solid var(--acento, var(--blue));
+    border-radius: 12px;
+    padding: 20px 18px;
+    flex: 1;
+    min-height: 330px;
+    display: flex; flex-direction: column;
+  }
+  .tec { font-size: 20px; font-weight: 600; letter-spacing: -.01em; }
+  .onde {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 12px; color: var(--acento, var(--blue));
+    margin-top: 6px;
+  }
+  ul { list-style: none; margin-top: 16px; display: flex; flex-direction: column; gap: 9px; }
+  li { font-size: 14px; color: #c3cee2; line-height: 1.35; padding-left: 13px; position: relative; }
+  li::before {
+    content: ""; position: absolute; left: 0; top: 7px;
+    width: 5px; height: 5px; border-radius: 50%; background: var(--acento, var(--blue));
+  }
+  .numero {
+    font-family: "JetBrains Mono", monospace;
+    font-weight: 700; font-size: 26px; margin-top: auto; padding-top: 16px;
+    letter-spacing: -.02em;
+  }
+  .rotulo { font-size: 12px; color: #8093b3; margin-top: 2px; }
+
+  .seta {
+    align-self: center; color: #3d4d6e; font-size: 22px;
+    padding: 0 2px; margin-top: 26px;
+  }
+
+  .rodape {
+    margin-top: 26px; display: flex; gap: 40px; align-items: center;
+    border-top: 1px solid rgba(255,255,255,.09); padding-top: 20px;
+  }
+  .item-rodape { display: flex; flex-direction: column; gap: 3px; }
+  .k {
+    font-family: "JetBrains Mono", monospace; font-size: 20px; font-weight: 700;
+  }
+  .v { font-size: 12px; color: #8093b3; }
+  .nota {
+    margin-left: auto; text-align: right; font-size: 13px; color: #9fb0cc;
+    max-width: 420px; line-height: 1.45;
+  }
+  .nota b { color: var(--amber); font-weight: 600; }
+</style>
+
+<div class="eyebrow">Aule Data &nbsp;/&nbsp; estudo de dados abertos</div>
+<h1>Preços de medicamentos em compras públicas</h1>
+<div class="sub">Onde mora o código, onde moram os dados, e o que verifica cada passo.</div>
+
+<div class="fluxo">
+
+  <div class="col" style="--acento: var(--cyan)">
+    <div class="fase">Fonte</div>
+    <div class="caixa">
+      <div class="tec">Compras.gov.br</div>
+      <div class="onde">API pública, externa</div>
+      <ul>
+        <li>Módulo de pesquisa de preços</li>
+        <li>Agrupamento por PDM, e não por item: 6,6x menos chamadas</li>
+        <li>Limite de concorrência, não de taxa</li>
+      </ul>
+      <div class="numero" style="color: var(--cyan)">1.878</div>
+      <div class="rotulo">PDMs coletados, zero falhas</div>
+    </div>
+  </div>
+
+  <div class="seta">&rarr;</div>
+
+  <div class="col" style="--acento: var(--blue)">
+    <div class="fase">Orquestração</div>
+    <div class="caixa">
+      <div class="tec">Airflow 2.10</div>
+      <div class="onde">docker &middot; dags/ &middot; ingestao/</div>
+      <ul>
+        <li>LocalExecutor, imagem própria</li>
+        <li>HTTP isolado num cliente: Retry-After, recuo exponencial</li>
+        <li>Controle de ingestão próprio: retomar não recoleta</li>
+      </ul>
+      <div class="numero" style="color: var(--blue)">572.552</div>
+      <div class="rotulo">registros brutos, payload intacto</div>
+    </div>
+  </div>
+
+  <div class="seta">&rarr;</div>
+
+  <div class="col" style="--acento: var(--blue)">
+    <div class="fase">Armazenamento</div>
+    <div class="caixa">
+      <div class="tec">Postgres 16</div>
+      <div class="onde">docker &middot; volume local</div>
+      <ul>
+        <li><code>raw.precos</code> guarda o JSON como veio</li>
+        <li>Escrita só por upsert, sobre a chave natural da fonte</li>
+        <li>Reprocessar não exige nova coleta</li>
+      </ul>
+      <div class="numero" style="color: var(--blue)">44.354</div>
+      <div class="rotulo">processos de compra</div>
+    </div>
+  </div>
+
+  <div class="seta">&rarr;</div>
+
+  <div class="col" style="--acento: var(--indigo)">
+    <div class="fase">Transformação</div>
+    <div class="caixa">
+      <div class="tec">dbt</div>
+      <div class="onde">dbt/models/</div>
+      <ul>
+        <li>staging: tipagem e chave de comparação</li>
+        <li>quarentena: 8.671 excluídos, com o motivo de cada um</li>
+        <li>marts: base limpa, dispersão e compras atípicas</li>
+      </ul>
+      <div class="numero" style="color: var(--indigo)">563.881</div>
+      <div class="rotulo">registros analisáveis, 98,5%</div>
+    </div>
+  </div>
+
+  <div class="seta">&rarr;</div>
+
+  <div class="col" style="--acento: var(--amber)">
+    <div class="fase">Resultado</div>
+    <div class="caixa">
+      <div class="tec">analise/</div>
+      <div class="onde">resultados.json &middot; versionado</div>
+      <ul>
+        <li>Todo número publicado sai de função testada</li>
+        <li>Nenhum número copiado à mão</li>
+        <li>Agregado com três cenários, para responder à objeção óbvia</li>
+      </ul>
+      <div class="numero" style="color: var(--amber)">R$ 45,6 bi</div>
+      <div class="rotulo">gasto analisado em 4.293 grupos comparáveis</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="rodape">
+  <div class="item-rodape"><div class="k">54</div><div class="v">testes Python</div></div>
+  <div class="item-rodape"><div class="k">15</div><div class="v">testes dbt</div></div>
+  <div class="item-rodape"><div class="k">6</div><div class="v">decisões registradas em ADR</div></div>
+  <div class="item-rodape"><div class="k">3</div><div class="v">testes que guardam defeitos reais</div></div>
+  <div class="nota">
+    Tudo isso roda num <b>Docker Compose</b>, num notebook.<br>
+    Nenhum serviço gerenciado, nenhum custo de nuvem.
+  </div>
+</div>
