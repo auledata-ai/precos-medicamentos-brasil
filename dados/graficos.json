@@ -1,0 +1,108 @@
+{
+  "histograma_dispersao": {
+    "barras": [
+      {
+        "inicio": 1.0,
+        "fim": 1.25,
+        "rotulo": "1,00",
+        "grupos": 914
+      },
+      {
+        "inicio": 1.25,
+        "fim": 1.5,
+        "rotulo": "1,25",
+        "grupos": 1661
+      },
+      {
+        "inicio": 1.5,
+        "fim": 1.75,
+        "rotulo": "1,50",
+        "grupos": 773
+      },
+      {
+        "inicio": 1.75,
+        "fim": 2.0,
+        "rotulo": "1,75",
+        "grupos": 346
+      },
+      {
+        "inicio": 2.0,
+        "fim": 2.25,
+        "rotulo": "2,00",
+        "grupos": 182
+      },
+      {
+        "inicio": 2.25,
+        "fim": 2.5,
+        "rotulo": "2,25",
+        "grupos": 111
+      },
+      {
+        "inicio": 2.5,
+        "fim": 2.75,
+        "rotulo": "2,50",
+        "grupos": 88
+      },
+      {
+        "inicio": 2.75,
+        "fim": 3.0,
+        "rotulo": "2,75",
+        "grupos": 38
+      },
+      {
+        "inicio": 3.0,
+        "fim": 3.25,
+        "rotulo": "3,00",
+        "grupos": 36
+      },
+      {
+        "inicio": 3.25,
+        "fim": 3.5,
+        "rotulo": "3,25",
+        "grupos": 18
+      },
+      {
+        "inicio": 3.5,
+        "fim": 3.75,
+        "rotulo": "3,50",
+        "grupos": 17
+      },
+      {
+        "inicio": 3.75,
+        "fim": 4.0,
+        "rotulo": "3,75",
+        "grupos": 14
+      },
+      {
+        "inicio": 4.0,
+        "fim": null,
+        "rotulo": "4,0x ou mais",
+        "grupos": 95
+      }
+    ],
+    "total_grupos": 4293,
+    "grupos_ate_1_75": 3348,
+    "porcentagem_ate_1_75": 78.0
+  },
+  "assinatura_quantidade_um": {
+    "barras": [
+      {
+        "faixa": "1.000x ou mais",
+        "registros": 288,
+        "porcentagem": 70.8
+      },
+      {
+        "faixa": "100x a 1.000x",
+        "registros": 1340,
+        "porcentagem": 11.6
+      },
+      {
+        "faixa": "10x a 100x",
+        "registros": 6144,
+        "porcentagem": 3.6
+      }
+    ],
+    "base": 0.5,
+    "concentracao": 143.0
+  }
+}

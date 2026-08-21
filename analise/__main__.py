@@ -13,9 +13,12 @@ from pathlib import Path
 
 import psycopg
 
+from analise import graficos
 from analise.resultados import tudo
 
-DESTINO = Path(__file__).resolve().parent.parent / "dados" / "resultados.json"
+DADOS = Path(__file__).resolve().parent.parent / "dados"
+DESTINO = DADOS / "resultados.json"
+DESTINO_GRAFICOS = DADOS / "graficos.json"
 
 
 def _dsn() -> str:
@@ -40,15 +43,17 @@ def _dsn() -> str:
 def main() -> int:
     with psycopg.connect(_dsn(), row_factory=psycopg.rows.dict_row) as ligacao:
         resultados = tudo(ligacao)
-    DESTINO.parent.mkdir(parents=True, exist_ok=True)
-    DESTINO.write_text(
-        json.dumps(resultados, indent=2, ensure_ascii=False) + "\n",
-        encoding="utf-8",
-    )
+        dados_graficos = graficos.tudo(ligacao)
+    DADOS.mkdir(parents=True, exist_ok=True)
+    for destino, conteudo in ((DESTINO, resultados), (DESTINO_GRAFICOS, dados_graficos)):
+        destino.write_text(
+            json.dumps(conteudo, indent=2, ensure_ascii=False) + "\n",
+            encoding="utf-8",
+        )
     # T201: aqui o `print` e a interface do comando, nao depuracao. Quem
     # corre isto na linha de comandos precisa de saber onde o arquivo foi
     # parar, e um logger escondia essa informacao atras de configuracao.
-    print(f"escrito: {DESTINO}")  # noqa: T201
+    print(f"escrito: {DESTINO}\nescrito: {DESTINO_GRAFICOS}")  # noqa: T201
     return 0
 
 
