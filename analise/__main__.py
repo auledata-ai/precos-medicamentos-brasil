@@ -46,7 +46,7 @@ def main() -> int:
         encoding="utf-8",
     )
     # T201: aqui o `print` e a interface do comando, nao depuracao. Quem
-    # corre isto na linha de comandos precisa de saber onde o ficheiro foi
+    # corre isto na linha de comandos precisa de saber onde o arquivo foi
     # parar, e um logger escondia essa informacao atras de configuracao.
     print(f"escrito: {DESTINO}")  # noqa: T201
     return 0

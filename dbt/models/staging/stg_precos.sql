@@ -69,7 +69,7 @@ normalizado as (
             when 'DOSE(S)' then 'DOSE'
             when 'DOSES'   then 'DOSE'
             when 'UN'  then 'UN'
-            -- Metade dos registos nao declara unidade, e nesses a capacidade
+            -- Metade dos registros nao declara unidade, e nesses a capacidade
             -- vem a zero. Ficam nulos: sem grandeza declarada nao ha como
             -- normalizar, e arbitrar uma inventaria dado.
             else null
@@ -95,7 +95,7 @@ select
     -- estava errado: "FRASCO" nao e uma quantidade. Um unico grupo continha
     -- frascos de 50 ML a 2 L, e ate ML misturado com G, o que fabricava
     -- dispersao onde ha apenas tamanhos diferentes. Afetava 781 dos 2.325
-    -- grupos com amostra util, 182 mil registos. A capacidade e a unidade
+    -- grupos com amostra util, 182 mil registros. A capacidade e a unidade
     -- entram na chave por isso.
     codigo_item
         || '|' || coalesce(unidade_fornecimento, 'SEM_UNIDADE')

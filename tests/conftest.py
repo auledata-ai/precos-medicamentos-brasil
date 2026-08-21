@@ -68,14 +68,14 @@ def _dsn_do_ambiente() -> str | None:
     """
     if dsn := os.environ.get("POSTGRES_DSN"):
         return dsn
-    utilizador = os.environ.get("POSTGRES_USER")
+    usuário = os.environ.get("POSTGRES_USER")
     senha = os.environ.get("POSTGRES_PASSWORD")
     base = os.environ.get("POSTGRES_DB")
-    if not (utilizador and senha and base):
+    if not (usuário and senha and base):
         return None
     servidor = os.environ.get("POSTGRES_HOST", "localhost")
     porta = os.environ.get("POSTGRES_PORT", "5433")
-    return f"postgresql://{utilizador}:{senha}@{servidor}:{porta}/{base}"
+    return f"postgresql://{usuário}:{senha}@{servidor}:{porta}/{base}"
 
 
 def _recriar(ligacao, criar_esquema) -> None:
@@ -83,7 +83,7 @@ def _recriar(ligacao, criar_esquema) -> None:
 
     Um `truncate` limparia os dados mas manteria a forma antiga das tabelas,
     e um `create table if not exists` não altera o que já existe. Depois de
-    mudarmos a chave do controlo de item para PDM, a suite inteira falhou
+    mudarmos a chave do controle de item para PDM, a suite inteira falhou
     contra um esquema obsoleto. Recriar é barato e não deixa essa dúvida.
     """
     ligacao.execute("drop schema if exists raw cascade")

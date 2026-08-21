@@ -14,11 +14,11 @@ models:
   - name: mart_dispersao_grupo
     description: >
       Dispersao de preco por grupo comparavel e ano. `amostra_suficiente`
-      marca os grupos com pelo menos 30 registos.
+      marca os grupos com pelo menos 30 registros.
     columns:
       - name: mediana
         data_tests: [not_null]
-      - name: n_registos
+      - name: n_registros
         data_tests: [not_null]
 
   - name: mart_compras_atipicas

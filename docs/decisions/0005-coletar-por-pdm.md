@@ -1,6 +1,6 @@
 # ADR 0005: Coletar por PDM, não por item de catálogo
 
-**Data:** 2026-08-21 · **Estado:** aceite · **Substitui parte do:** ADR 0003
+**Data:** 2026-08-21 · **Estado:** aceito · **Substitui parte do:** ADR 0003
 
 ## Contexto
 
@@ -25,17 +25,17 @@ medicamentos tem **12.359 itens** e apenas **1.878 PDMs**, uma redução de
 6,6 vezes no número de chamadas.
 
 Verificámos que a consulta por PDM devolve um **superconjunto** da consulta
-por item: para o PDM 348, vieram 588 registos cobrindo 3 itens, e todos os 42
-registos da consulta por item 354314 estavam lá.
+por item: para o PDM 348, vieram 588 registros cobrindo 3 itens, e todos os 42
+registros da consulta por item 354314 estavam lá.
 
 O tempo de coleta completa cai de cerca de nove horas para pouco mais de uma.
 
 ## Consequências
 
-- A tabela de controlo passa a ter uma linha por PDM, não por item. Menos
+- A tabela de controle passa a ter uma linha por PDM, não por item. Menos
   linhas, e a unidade de retomada passa a ser o PDM.
 - A cobertura publicada passa a ser em PDMs. Itens continuam a existir na
-  camada raw, porque cada registo de preço traz o seu `codigoItemCatalogo`.
+  camada raw, porque cada registro de preço traz o seu `codigoItemCatalogo`.
 - Um PDM com muitos itens pode ultrapassar as 500 linhas por página. A
   paginação já trata disso; não há mudança necessária.
 - Se a fonte alterar o agrupamento por PDM, a cobertura muda sem aviso. O

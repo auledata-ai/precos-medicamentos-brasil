@@ -43,7 +43,7 @@ def preco_bruto(id_compra, id_item, codigo_item=1):
 
 
 class TestSincronizarCatalogo:
-    def test_guarda_os_itens_e_cria_o_controlo(self, conexao):
+    def test_guarda_os_itens_e_cria_o_controle(self, conexao):
         cliente = ClienteFalso(
             catalogo=[
                 {"codigoItem": 1, "codigoClasse": 6505, "descricaoItem": "A", "codigoPdm": 1},
@@ -81,7 +81,7 @@ class TestColetarLote:
         guardar_catalogo(conexao, [item(1), item(2)])
         cliente = ClienteFalso({"1": [preco_bruto("C1", "I1")], "2": []})
         r = coletar_lote(cliente, conexao, ["1", "2"])
-        assert (r.sucesso, r.sem_compras, r.falha, r.registos) == (1, 1, 0, 1)
+        assert (r.sucesso, r.sem_compras, r.falha, r.registros) == (1, 1, 0, 1)
 
     def test_falha_de_um_item_nao_derruba_o_lote(self, conexao):
         """É o requisito central: milhares de chamadas, alguma falha sempre.

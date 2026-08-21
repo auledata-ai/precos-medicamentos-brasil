@@ -2,7 +2,7 @@
 --
 -- Duas decisoes que mudam o resultado:
 --
--- 1. Mediana, nao media. Um unico registo de R$ 21,9 milhoes num grupo cuja
+-- 1. Mediana, nao media. Um unico registro de R$ 21,9 milhoes num grupo cuja
 --    mediana e R$ 3,28 arrasta qualquer media e nao arrasta a mediana.
 --
 -- 2. `percentile_disc` e nao `percentile_cont`. A versao continua devolve
@@ -10,7 +10,7 @@
 --    que ninguem pagou. A discreta devolve um preco realmente observado e
 --    mantem o tipo `numeric`, que e o que dinheiro precisa.
 --
--- 3. Corte em 30 registos. Abaixo disso a mediana do grupo oscila com um
+-- 3. Corte em 30 registros. Abaixo disso a mediana do grupo oscila com um
 --    unico contrato e a "dispersao" mede o tamanho da amostra, nao o
 --    mercado. Os grupos pequenos ficam na tabela, marcados, para nao
 --    desaparecerem em silencio: quem os quiser usar sabe o que esta a usar.
@@ -25,7 +25,7 @@ with por_grupo_ano as (
         capacidade_unidade,
         unidade_medida,
         extract(year from data_compra)::int                      as ano,
-        count(*)                                                 as n_registos,
+        count(*)                                                 as n_registros,
         count(distinct cnpj_fornecedor)                          as n_fornecedores,
         count(distinct codigo_uasg)                              as n_compradores,
         min(preco_unitario)                                      as preco_min,
@@ -40,7 +40,7 @@ with por_grupo_ano as (
 
 select
     *,
-    n_registos >= 30 as amostra_suficiente,
+    n_registros >= 30 as amostra_suficiente,
 
     -- Quantas vezes o preco mais alto excede a mediana do proprio grupo.
     -- Nulo quando a mediana e zero, em vez de divisao por zero disfarcada.

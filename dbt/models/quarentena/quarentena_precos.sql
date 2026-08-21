@@ -1,10 +1,10 @@
--- Registos que nao podem entrar na analise, com o motivo de cada um.
+-- Registros que nao podem entrar na analise, com o motivo de cada um.
 --
 -- A regra e sempre a mesma: excluir so o que impede a comparacao, nunca o
 -- que parece estranho. Um preco muito acima da mediana do grupo e o achado
 -- do estudo, nao um defeito, e por isso nao aparece aqui.
 --
--- Cada registo leva todos os motivos que o atingem, nao apenas o primeiro.
+-- Cada registro leva todos os motivos que o atingem, nao apenas o primeiro.
 -- Contar "202 sem data" e "22 com quantidade invalida" como se fossem
 -- conjuntos disjuntos daria um total errado se houver sobreposicao.
 

@@ -1,6 +1,6 @@
-# ADR 0003: Tabela de controlo de ingestão própria
+# ADR 0003: Tabela de controle de ingestão própria
 
-**Data:** 2026-08-21 · **Estado:** aceite
+**Data:** 2026-08-21 · **Estado:** aceito
 
 ## Contexto
 
@@ -10,9 +10,9 @@ coletado.
 
 ## Decisão
 
-Uma tabela `controlo_ingestao` em Postgres, com uma linha por item de
+Uma tabela `controle_ingestao` em Postgres, com uma linha por item de
 catálogo: identificador, instante da última coleta bem sucedida, número de
-registos obtidos, e estado da última tentativa.
+registros obtidos, e estado da última tentativa.
 
 ## Porquê não confiar no estado do Airflow
 
@@ -30,5 +30,5 @@ ambiente não pode implicar duas horas de recoleta.
 - A tabela dá observabilidade de graça: cobertura da coleta, itens sem
   compra, taxa de falha por item. Esses números são conteúdo publicável.
 - Reprocessamento forçado precisa de um parâmetro explícito que ignore o
-  controlo. Sem ele, reexecutar não recoleta nada, o que é o comportamento
+  controle. Sem ele, reexecutar não recoleta nada, o que é o comportamento
   desejado por omissão.

@@ -13,7 +13,7 @@ x-airflow-comum: &airflow-comum
     AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
     AIRFLOW__CORE__LOAD_EXAMPLES: "false"
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
-    # Sem isto o scheduler recarrega os ficheiros a cada 5s e come CPU a toa.
+    # Sem isto o scheduler recarrega os arquivos a cada 5s e come CPU a toa.
     AIRFLOW__SCHEDULER__MIN_FILE_PROCESS_INTERVAL: "30"
     AIRFLOW__WEBSERVER__EXPOSE_CONFIG: "false"
     AIRFLOW__CORE__PARALLELISM: "8"

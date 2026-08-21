@@ -1,4 +1,4 @@
-"""Persistência da camada raw e do controlo de ingestão.
+"""Persistência da camada raw e do controle de ingestão.
 
 Todo o SQL vive aqui. As funções recebem a ligação, não a criam: assim o
 chamador controla a transação, e os testes correm dentro de uma que é
@@ -52,24 +52,24 @@ class Cobertura:
     sem_compras: int
     falha: int
     pendente: int
-    registos: int
+    registros: int
 
 
 def _texto(valor: Any) -> str:
     return str(valor)
 
 
-def guardar_catalogo(conexao: psycopg.Connection, registos: list[RegistoBruto]) -> int:
-    """Grava itens do catálogo e cria a linha de controlo de cada PDM.
+def guardar_catalogo(conexao: psycopg.Connection, registros: list[RegistoBruto]) -> int:
+    """Grava itens do catálogo e cria a linha de controle de cada PDM.
 
-    O controlo é por PDM e não por item: um PDM agrupa itens equivalentes e
+    O controle é por PDM e não por item: um PDM agrupa itens equivalentes e
     uma só chamada traz os preços de todos (ver ADR 0005).
 
     A linha nasce 'pendente' e nunca é rebaixada por uma recoleta do
     catálogo: um PDM já coletado com sucesso não volta a pendente só porque
     o catálogo foi lido de novo.
     """
-    if not registos:
+    if not registros:
         return 0
     linhas = [
         (
@@ -80,7 +80,7 @@ def guardar_catalogo(conexao: psycopg.Connection, registos: list[RegistoBruto]) 
             json.dumps(r.parametros, ensure_ascii=False),
             r.coletado_em,
         )
-        for r in registos
+        for r in registros
     ]
     with conexao.cursor() as cur:
         cur.executemany(
@@ -97,12 +97,12 @@ def guardar_catalogo(conexao: psycopg.Connection, registos: list[RegistoBruto]) 
         )
         pdms = {
             _texto(r.payload["codigoPdm"])
-            for r in registos
+            for r in registros
             if r.payload.get("codigoPdm") is not None
         }
         cur.executemany(
             """
-            insert into raw.controlo_ingestao (codigo_pdm)
+            insert into raw.controle_ingestao (codigo_pdm)
             values (%s)
             on conflict (codigo_pdm) do nothing
             """,
@@ -111,13 +111,13 @@ def guardar_catalogo(conexao: psycopg.Connection, registos: list[RegistoBruto]) 
     return len(linhas)
 
 
-def guardar_precos(conexao: psycopg.Connection, registos: list[RegistoBruto]) -> int:
+def guardar_precos(conexao: psycopg.Connection, registros: list[RegistoBruto]) -> int:
     """Grava preços pela chave natural (idCompra, idItemCompra).
 
-    O `codigo_item` vem de cada registo e não do parâmetro da consulta: uma
+    O `codigo_item` vem de cada registro e não do parâmetro da consulta: uma
     coleta por PDM traz preços de vários itens diferentes.
     """
-    if not registos:
+    if not registros:
         return 0
     linhas = [
         (
@@ -130,7 +130,7 @@ def guardar_precos(conexao: psycopg.Connection, registos: list[RegistoBruto]) ->
             json.dumps(r.parametros, ensure_ascii=False),
             r.coletado_em,
         )
-        for r in registos
+        for r in registros
     ]
     with conexao.cursor() as cur:
         cur.executemany(
@@ -149,33 +149,33 @@ def guardar_precos(conexao: psycopg.Connection, registos: list[RegistoBruto]) ->
     return len(linhas)
 
 
-def marcar_coletado(conexao: psycopg.Connection, codigo_pdm: str, registos_obtidos: int) -> None:
+def marcar_coletado(conexao: psycopg.Connection, codigo_pdm: str, registros_obtidos: int) -> None:
     """Item coletado com sucesso.
 
-    Zero registos é 'sem_compras', não falha: metade do catálogo não tem
+    Zero registros é 'sem_compras', não falha: metade do catálogo não tem
     compra alguma, e tratar isso como erro encheria o log de ruído e faria
     o pipeline repetir eternamente itens que nunca terão dados.
     """
-    estado = "sucesso" if registos_obtidos else "sem_compras"
+    estado = "sucesso" if registros_obtidos else "sem_compras"
     conexao.execute(
         """
-        update raw.controlo_ingestao
-           set coletado_em = %s, registos_obtidos = %s, estado = %s,
+        update raw.controle_ingestao
+           set coletado_em = %s, registros_obtidos = %s, estado = %s,
                erro = null, atualizado_em = now()
          where codigo_pdm = %s
         """,
-        (datetime.now(UTC), registos_obtidos, estado, _texto(codigo_pdm)),
+        (datetime.now(UTC), registros_obtidos, estado, _texto(codigo_pdm)),
     )
 
 
 def marcar_falha(conexao: psycopg.Connection, codigo_pdm: str, erro: str) -> None:
-    """Falha registada com o motivo, e o contador de tentativas incrementado.
+    """Falha registrada com o motivo, e o contador de tentativas incrementado.
 
     `coletado_em` NÃO é tocado: a falha não invalida a última coleta boa.
     """
     conexao.execute(
         """
-        update raw.controlo_ingestao
+        update raw.controle_ingestao
            set estado = 'falha', erro = %s,
                tentativas = tentativas + 1, atualizado_em = now()
          where codigo_pdm = %s
@@ -202,12 +202,12 @@ def pdms_pendentes(
     recoletar deliberadamente, e é explícita de propósito.
     """
     if forcar:
-        sql = "select codigo_pdm from raw.controlo_ingestao order by codigo_pdm"
+        sql = "select codigo_pdm from raw.controle_ingestao order by codigo_pdm"
         parametros: tuple = ()
     else:
         sql = """
             select codigo_pdm
-              from raw.controlo_ingestao
+              from raw.controle_ingestao
              where tentativas < %s
                and (coletado_em is null or coletado_em < %s)
              order by coletado_em nulls first, codigo_pdm
@@ -230,8 +230,8 @@ def cobertura(conexao: psycopg.Connection) -> Cobertura:
                    count(*) filter (where estado = 'sem_compras') as sem_compras,
                    count(*) filter (where estado = 'falha')       as falha,
                    count(*) filter (where estado = 'pendente')    as pendente,
-                   coalesce(sum(registos_obtidos), 0)             as registos
-              from raw.controlo_ingestao
+                   coalesce(sum(registros_obtidos), 0)             as registros
+              from raw.controle_ingestao
             """
         )
         return Cobertura(**cur.fetchone())

@@ -1,6 +1,6 @@
 # ADR 0004: Sem Airbyte
 
-**Data:** 2026-08-21 · **Estado:** aceite
+**Data:** 2026-08-21 · **Estado:** aceito
 
 ## Contexto
 

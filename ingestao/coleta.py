@@ -31,7 +31,7 @@ class RegistoBruto:
     """Uma linha da fonte, com a proveniência anexada.
 
     O `hash_payload` permite detetar se a fonte mudou o conteúdo de um
-    registo entre coletas, sem ter de comparar campo a campo.
+    registro entre coletas, sem ter de comparar campo a campo.
     """
 
     endpoint: str
@@ -70,17 +70,17 @@ def coletar_catalogo(cliente: Cliente, classe: int = CLASSE_MEDICAMENTOS) -> lis
 
 
 def coletar_precos_por_pdm(cliente: Cliente, codigo_pdm: int | str) -> list[RegistoBruto]:
-    """Todos os preços registados para um PDM.
+    """Todos os preços registrados para um PDM.
 
     O PDM agrupa itens equivalentes, e a consulta devolve os preços de todos
     numa só chamada. É a unidade de coleta desde o ADR 0005.
 
     Boa parte dos PDMs não tem compra alguma, e a resposta vazia é
-    informação: devolve lista vazia, e quem chama regista a cobertura.
+    informação: devolve lista vazia, e quem chama registra a cobertura.
     """
     parametros = {"tipo": "codigoPdm", "codigo": str(codigo_pdm)}
-    registos = cliente.paginar(CAMINHO_PRECOS, parametros, tamanho_pagina=PAGINA_MAXIMA)
-    return [RegistoBruto.de(CAMINHO_PRECOS, parametros, r) for r in registos]
+    registros = cliente.paginar(CAMINHO_PRECOS, parametros, tamanho_pagina=PAGINA_MAXIMA)
+    return [RegistoBruto.de(CAMINHO_PRECOS, parametros, r) for r in registros]
 
 
 def coletar_precos(cliente: Cliente, codigo_item: int | str) -> list[RegistoBruto]:
@@ -90,5 +90,5 @@ def coletar_precos(cliente: Cliente, codigo_item: int | str) -> list[RegistoBrut
     a consulta por PDM. Não é usado no pipeline.
     """
     parametros = {"tipo": "codigoItemCatalogo", "codigo": str(codigo_item)}
-    registos = cliente.paginar(CAMINHO_PRECOS, parametros, tamanho_pagina=PAGINA_MAXIMA)
-    return [RegistoBruto.de(CAMINHO_PRECOS, parametros, r) for r in registos]
+    registros = cliente.paginar(CAMINHO_PRECOS, parametros, tamanho_pagina=PAGINA_MAXIMA)
+    return [RegistoBruto.de(CAMINHO_PRECOS, parametros, r) for r in registros]

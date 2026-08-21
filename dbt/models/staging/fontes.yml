@@ -12,6 +12,6 @@ sources:
           - name: codigo_item
             tests: [unique, not_null]
       - name: precos
-        description: Um registo por item de compra, chave (id_compra, id_item_compra).
-      - name: controlo_ingestao
+        description: Um registro por item de compra, chave (id_compra, id_item_compra).
+      - name: controle_ingestao
         description: Estado da coleta por item. Sustenta a cobertura publicada.

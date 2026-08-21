@@ -1,4 +1,4 @@
-"""Orquestração da coleta: percorre itens, isola falhas, actualiza o controlo.
+"""Orquestração da coleta: percorre itens, isola falhas, actualiza o controle.
 
 Esta camada existe para a DAG poder ser fina. Tudo o que aqui está é
 testável sem Airflow, com um cliente falso e uma transação revertida.
@@ -39,13 +39,13 @@ class ResultadoDoLote:
     sucesso: int
     sem_compras: int
     falha: int
-    registos: int
+    registros: int
 
 
 def sincronizar_catalogo(cliente: Cliente, conexao: psycopg.Connection) -> int:
-    """Actualiza o catálogo e cria as linhas de controlo em falta."""
-    registos = coletar_catalogo(cliente)
-    guardados = guardar_catalogo(conexao, registos)
+    """Actualiza o catálogo e cria as linhas de controle em falta."""
+    registros = coletar_catalogo(cliente)
+    guardados = guardar_catalogo(conexao, registros)
     conexao.commit()
     logger.info("catálogo sincronizado: %d itens", guardados)
     return guardados
@@ -80,15 +80,15 @@ def coletar_lote(
 
     O commit por unidade é deliberado. Se fosse um commit no fim, uma falha a
     meio perderia todo o progresso do lote, que é exactamente o problema que
-    a tabela de controlo existe para evitar.
+    a tabela de controle existe para evitar.
     """
-    sucesso = sem_compras = falha = registos = 0
+    sucesso = sem_compras = falha = registros = 0
 
     for codigo in codigos:
         try:
             brutos = coletar_precos_por_pdm(cliente, codigo)
         except (ErroDaFonte, FonteIndisponivel) as exc:
-            # Falha esperada da fonte: regista e continua. Rebentar aqui
+            # Falha esperada da fonte: registra e continua. Rebentar aqui
             # desperdicaria os itens ja processados neste lote.
             marcar_falha(conexao, codigo, str(exc))
             conexao.commit()
@@ -100,19 +100,19 @@ def coletar_lote(
         marcar_coletado(conexao, codigo, len(brutos))
         conexao.commit()
 
-        registos += len(brutos)
+        registros += len(brutos)
         if brutos:
             sucesso += 1
         else:
             sem_compras += 1
 
-    resultado = ResultadoDoLote(len(codigos), sucesso, sem_compras, falha, registos)
+    resultado = ResultadoDoLote(len(codigos), sucesso, sem_compras, falha, registros)
     logger.info(
-        "lote concluído: %d PDMs, %d com compras, %d sem compras, %d falhas, %d registos",
+        "lote concluído: %d PDMs, %d com compras, %d sem compras, %d falhas, %d registros",
         resultado.pdms,
         resultado.sucesso,
         resultado.sem_compras,
         resultado.falha,
-        resultado.registos,
+        resultado.registros,
     )
     return resultado

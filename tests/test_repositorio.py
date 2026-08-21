@@ -66,29 +66,29 @@ class TestIdempotencia:
     def test_recoletar_catalogo_nao_rebaixa_item_ja_coletado(self, conexao):
         """Ler o catálogo de novo não pode apagar o progresso da coleta."""
         guardar_catalogo(conexao, [item(1)])
-        marcar_coletado(conexao, "1", registos_obtidos=5)
+        marcar_coletado(conexao, "1", registros_obtidos=5)
         guardar_catalogo(conexao, [item(1)])
-        estado = conexao.execute("select estado from raw.controlo_ingestao").fetchone()["estado"]
+        estado = conexao.execute("select estado from raw.controle_ingestao").fetchone()["estado"]
         assert estado == "sucesso"
 
 
 class TestEstadoDaColeta:
-    def test_zero_registos_e_sem_compras_e_nao_falha(self, conexao):
+    def test_zero_registros_e_sem_compras_e_nao_falha(self, conexao):
         """Metade do catálogo não tem compra. Tratar como erro faria o
         pipeline repetir eternamente itens que nunca terão dados."""
         guardar_catalogo(conexao, [item(1)])
-        marcar_coletado(conexao, "1", registos_obtidos=0)
+        marcar_coletado(conexao, "1", registros_obtidos=0)
         assert (
-            conexao.execute("select estado from raw.controlo_ingestao").fetchone()["estado"]
+            conexao.execute("select estado from raw.controle_ingestao").fetchone()["estado"]
             == "sem_compras"
         )
 
     def test_falha_nao_apaga_a_ultima_coleta_boa(self, conexao):
         guardar_catalogo(conexao, [item(1)])
-        marcar_coletado(conexao, "1", registos_obtidos=3)
+        marcar_coletado(conexao, "1", registros_obtidos=3)
         marcar_falha(conexao, "1", "503 da fonte")
         linha = conexao.execute(
-            "select coletado_em, estado, tentativas from raw.controlo_ingestao"
+            "select coletado_em, estado, tentativas from raw.controle_ingestao"
         ).fetchone()
         assert linha["coletado_em"] is not None
         assert linha["estado"] == "falha"
@@ -99,7 +99,7 @@ class TestEstadoDaColeta:
         marcar_falha(conexao, "1", "erro")
         marcar_falha(conexao, "1", "erro")
         assert (
-            conexao.execute("select tentativas t from raw.controlo_ingestao").fetchone()["t"] == 2
+            conexao.execute("select tentativas t from raw.controle_ingestao").fetchone()["t"] == 2
         )
 
 
@@ -118,7 +118,7 @@ class TestRetomada:
         no dia da primeira execução."""
         guardar_catalogo(conexao, [item(1)])
         conexao.execute(
-            "update raw.controlo_ingestao set coletado_em = %s, estado = 'sucesso'",
+            "update raw.controle_ingestao set coletado_em = %s, estado = 'sucesso'",
             (datetime.now(UTC) - timedelta(days=30),),
         )
         assert pdms_pendentes(conexao, validade=timedelta(days=7)) == ["1"]
@@ -147,7 +147,7 @@ class TestRetomada:
         """Numa execução limitada, prioriza quem nunca teve dado nenhum."""
         guardar_catalogo(conexao, [item(1), item(2)])
         conexao.execute(
-            "update raw.controlo_ingestao set coletado_em = %s where codigo_pdm = '1'",
+            "update raw.controle_ingestao set coletado_em = %s where codigo_pdm = '1'",
             (datetime.now(UTC) - timedelta(days=30),),
         )
         assert pdms_pendentes(conexao, limite=1) == ["2"]
@@ -161,4 +161,4 @@ class TestCobertura:
         marcar_falha(conexao, "3", "erro")
         c = cobertura(conexao)
         assert (c.total, c.sucesso, c.sem_compras, c.falha, c.pendente) == (4, 1, 1, 1, 1)
-        assert c.registos == 10
+        assert c.registros == 10

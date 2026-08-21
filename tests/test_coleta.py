@@ -62,7 +62,7 @@ class TestColetarCatalogo:
 
 class TestColetarPrecos:
     @responses.activate
-    def test_devolve_todos_os_registos(self, precos_reais):
+    def test_devolve_todos_os_registros(self, precos_reais):
         responses.add(responses.GET, f"{BASE}{CAMINHO_PRECOS}", json=precos_reais)
         obtido = coletar_precos(Cliente(RAPIDO), 354314)
         assert len(obtido) == len(precos_reais["resultado"])

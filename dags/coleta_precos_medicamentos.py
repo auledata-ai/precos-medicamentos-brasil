@@ -11,7 +11,7 @@ Parâmetros da execução, todos com default explícito:
   n_lotes         Lotes paralelos. O teto útil é o limite de taxa da fonte,
                   não a nossa capacidade.
   limite          Máximo de itens nesta execução. Útil para ensaiar.
-  forcar          Ignora o controlo e recoleta tudo. Explícito de propósito.
+  forcar          Ignora o controle e recoleta tudo. Explícito de propósito.
 """
 
 from __future__ import annotations
@@ -92,7 +92,7 @@ def coleta_precos_medicamentos():
             atual = cobertura(conexao)
         total = {
             chave: sum(r[chave] for r in resultados)
-            for chave in ("pdms", "sucesso", "sem_compras", "falha", "registos")
+            for chave in ("pdms", "sucesso", "sem_compras", "falha", "registros")
         }
         return {"execucao": total, "acumulado": atual.__dict__}
 

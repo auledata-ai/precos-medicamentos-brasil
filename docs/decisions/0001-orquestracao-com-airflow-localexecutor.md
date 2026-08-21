@@ -1,11 +1,11 @@
 # ADR 0001: Airflow com LocalExecutor
 
-**Data:** 2026-08-21 · **Estado:** aceite
+**Data:** 2026-08-21 · **Estado:** aceito
 
 ## Contexto
 
 A ingestão exige cerca de 6.600 chamadas HTTP, uma por item de catálogo com
-compra registada. A uma chamada por segundo são aproximadamente duas horas.
+compra registrada. A uma chamada por segundo são aproximadamente duas horas.
 A fonte atualiza continuamente, o que torna a carga recorrente.
 
 ## Decisão
@@ -44,5 +44,5 @@ memória gasta em coordenação de trabalho que não existe.
   porque o teto real é a fonte.
 - Escalar horizontalmente exigiria trocar de executor. Não é previsto.
 - O estado do Airflow **não** é a fonte de verdade da retomada. Uma tabela de
-  controlo própria regista o que já foi coletado (ver ADR 0003), porque
+  controle própria registra o que já foi coletado (ver ADR 0003), porque
   limpar metadados do Airflow não pode significar recoletar tudo.

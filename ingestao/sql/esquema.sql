@@ -1,4 +1,4 @@
--- Esquema da camada raw e do controlo de ingestao.
+-- Esquema da camada raw e do controle de ingestao.
 --
 -- raw guarda a resposta como veio, em jsonb, com a proveniencia ao lado.
 -- Tipagem e normalizacao pertencem a staging: se tipassemos aqui, um erro
@@ -30,16 +30,16 @@ create table if not exists raw.precos (
 
 create index if not exists precos_por_item on raw.precos (codigo_item);
 
--- Controlo proprio, deliberadamente separado do estado do Airflow.
+-- Controle proprio, deliberadamente separado do estado do Airflow.
 -- O Airflow sabe se uma task correu; isto sabe se um PDM foi coletado.
 --
 -- A unidade e o PDM e nao o item: um PDM agrupa itens equivalentes, e a
 -- consulta por PDM devolve os precos de todos eles numa chamada. Sao 1.878
 -- PDMs contra 12.359 itens (ver ADR 0005).
-create table if not exists raw.controlo_ingestao (
+create table if not exists raw.controle_ingestao (
     codigo_pdm        text        primary key,
     coletado_em       timestamptz,
-    registos_obtidos  integer     not null default 0,
+    registros_obtidos  integer     not null default 0,
     estado            text        not null default 'pendente'
         check (estado in ('pendente', 'sucesso', 'sem_compras', 'falha')),
     erro              text,
@@ -48,5 +48,5 @@ create table if not exists raw.controlo_ingestao (
 );
 
 -- A consulta de pendentes filtra por estado e validade, e ambos entram no indice.
-create index if not exists controlo_por_estado
-    on raw.controlo_ingestao (estado, coletado_em);
+create index if not exists controle_por_estado
+    on raw.controle_ingestao (estado, coletado_em);

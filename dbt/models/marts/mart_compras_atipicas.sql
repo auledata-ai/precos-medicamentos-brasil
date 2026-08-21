@@ -2,8 +2,8 @@
 --
 -- Esta tabela nao acusa ninguem. Um preco alto tem explicacoes legitimas:
 -- compra de urgencia, quantidade minima, logistica para municipio remoto,
--- registo de preco de lote lancado como unitario. O que ela faz e reduzir
--- 564 mil registos a uma lista curta que vale a pena olhar, e dar o
+-- registro de preco de lote lancado como unitario. O que ela faz e reduzir
+-- 564 mil registros a uma lista curta que vale a pena olhar, e dar o
 -- contexto necessario para julgar cada caso.
 --
 -- O criterio e a razao para a mediana do grupo, e nao um desvio padrao:
@@ -19,7 +19,7 @@ with base as (
     select
         p.*,
         d.mediana                as mediana_do_grupo,
-        d.n_registos             as n_registos_do_grupo,
+        d.n_registros             as n_registros_do_grupo,
         d.n_fornecedores         as n_fornecedores_do_grupo,
         d.amostra_suficiente
     from {{ ref('mart_precos') }} p
@@ -63,7 +63,7 @@ select
     round((preco_unitario - mediana_do_grupo) * quantidade, 2)
         as diferenca_para_a_mediana,
 
-    n_registos_do_grupo,
+    n_registros_do_grupo,
     n_fornecedores_do_grupo
 from base
 where preco_unitario / mediana_do_grupo >= {{ corte_razao }}

@@ -37,20 +37,20 @@ CAMPOS_DE_CATALOGO = {"codigoItem", "codigoClasse", "descricaoItem", "codigoPdm"
 
 class TestContratoDoCatalogo:
     def test_a_classe_de_medicamentos_ainda_existe(self):
-        registos = coletar_catalogo(Cliente())
-        assert len(registos) > 1000, "catálogo encolheu de forma inesperada"
-        assert all(r.payload["codigoClasse"] == CLASSE_MEDICAMENTOS for r in registos)
+        registros = coletar_catalogo(Cliente())
+        assert len(registros) > 1000, "catálogo encolheu de forma inesperada"
+        assert all(r.payload["codigoClasse"] == CLASSE_MEDICAMENTOS for r in registros)
 
     def test_os_campos_do_catalogo_continuam_presentes(self):
-        registo = coletar_catalogo(Cliente())[0]
-        assert CAMPOS_DE_CATALOGO <= set(registo.payload)
+        registro = coletar_catalogo(Cliente())[0]
+        assert CAMPOS_DE_CATALOGO <= set(registro.payload)
 
 
 class TestContratoDosPrecos:
     def test_os_campos_de_preco_continuam_presentes(self):
-        registos = coletar_precos(Cliente(), 354314)
-        assert registos, "item de referência deixou de ter compras registadas"
-        assert CAMPOS_DE_PRECO <= set(registos[0].payload)
+        registros = coletar_precos(Cliente(), 354314)
+        assert registros, "item de referência deixou de ter compras registradas"
+        assert CAMPOS_DE_PRECO <= set(registros[0].payload)
 
     def test_o_municipio_continua_em_codigo_ibge_de_sete_digitos(self):
         """A junção com dados do IBGE depende disto."""
@@ -68,4 +68,4 @@ class TestContratoDoPdm:
         por_item = {chave(r) for r in coletar_precos(Cliente(), 354314)}
         por_pdm = {chave(r) for r in coletar_precos_por_pdm(Cliente(), 348)}
         assert por_item, "item de referência deixou de ter compras"
-        assert por_item <= por_pdm, f"{len(por_item - por_pdm)} registos fora do PDM"
+        assert por_item <= por_pdm, f"{len(por_item - por_pdm)} registros fora do PDM"

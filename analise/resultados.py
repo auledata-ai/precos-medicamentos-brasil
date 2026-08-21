@@ -9,20 +9,20 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-# Acima desta razão face à mediana do grupo, um registo é tratado como cauda
+# Acima desta razão face à mediana do grupo, um registro é tratado como cauda
 # extrema. Não é um limiar de suspeita: serve para medir a sensibilidade do
 # agregado aos valores absurdos, e nada mais.
 RAZAO_EXTREMA = 1000
 RAZAO_ALTA = 100
 
-# Abaixo deste número de registos a mediana do grupo oscila com um único
+# Abaixo deste número de registros a mediana do grupo oscila com um único
 # contrato, e a dispersão medida passa a ser o tamanho da amostra.
 MINIMO_POR_GRUPO = 30
 
 
 @dataclass(frozen=True)
 class Cobertura:
-    registos: int
+    registros: int
     compras: int
     fornecedores: int
     municipios: int
@@ -33,7 +33,7 @@ class Cobertura:
 def cobertura(ligacao) -> Cobertura:
     linha = ligacao.execute(
         """
-        select count(*)                          as registos,
+        select count(*)                          as registros,
                count(distinct id_compra)         as compras,
                count(distinct cnpj_fornecedor)   as fornecedores,
                count(distinct codigo_municipio)  as municipios,
@@ -48,7 +48,7 @@ def cobertura(ligacao) -> Cobertura:
 def quarentena(ligacao) -> dict:
     """Quanto foi excluído e porquê.
 
-    O total conta registos, não motivos: um registo com dois motivos entra
+    O total conta registros, não motivos: um registro com dois motivos entra
     uma vez. Somar as linhas do resumo daria um número maior do que a
     realidade, e é esse o erro que esta separação evita.
     """
@@ -57,21 +57,21 @@ def quarentena(ligacao) -> dict:
     ).fetchone()["n"]
     base = ligacao.execute("select count(*) as n from dbt_marts.mart_precos").fetchone()["n"]
     motivos = ligacao.execute(
-        "select motivo, registos, percentagem_do_total"
-        "  from dbt_quarentena.quarentena_resumo order by registos desc"
+        "select motivo, registros, porcentagem_do_total"
+        "  from dbt_quarentena.quarentena_resumo order by registros desc"
     ).fetchall()
     return {
-        "registos_excluidos": total,
-        "registos_analisados": base,
-        "percentagem_excluida": round(100 * total / (total + base), 4),
+        "registros_excluidos": total,
+        "registros_analisados": base,
+        "porcentagem_excluida": round(100 * total / (total + base), 4),
         # `numeric` chega como Decimal e nao serializa em JSON. A conversao
         # e aqui, junto da consulta, e nao no escritor: quem le o JSON nao
         # tem de saber que a fonte era Postgres.
         "por_motivo": [
             {
                 "motivo": m["motivo"],
-                "registos": m["registos"],
-                "percentagem_do_total": float(m["percentagem_do_total"]),
+                "registros": m["registros"],
+                "porcentagem_do_total": float(m["porcentagem_do_total"]),
             }
             for m in motivos
         ],
@@ -104,19 +104,19 @@ def dispersao_tipica(ligacao) -> dict:
 
 
 def cauda_extrema(ligacao) -> dict:
-    """Caracterização da cauda, e o padrão de registo que a explica.
+    """Caracterização da cauda, e o padrão de registro que a explica.
 
-    `quantidade = 1` é raro na base e domina os registos mais absurdos. É a
+    `quantidade = 1` é raro na base e domina os registros mais absurdos. É a
     assinatura de um lote inteiro lançado como uma única unidade: a
     Sinvastatina a R$ 750.000 não é um comprimido caro, é uma compra inteira
-    registada como se fosse um.
+    registrada como se fosse um.
     """
     faixas = ligacao.execute(
         f"""
         select case when razao_mediana >= {RAZAO_EXTREMA} then 'extrema'
                     when razao_mediana >= {RAZAO_ALTA}    then 'alta'
                     else 'moderada' end                        as faixa,
-               count(*)                                        as registos,
+               count(*)                                        as registros,
                count(*) filter (where quantidade = 1)          as com_quantidade_um
           from dbt_marts.mart_compras_atipicas
          group by 1
@@ -132,15 +132,15 @@ def cauda_extrema(ligacao) -> dict:
 
     por_faixa = {}
     for f in faixas:
-        pct = round(100 * f["com_quantidade_um"] / f["registos"], 1)
+        pct = round(100 * f["com_quantidade_um"] / f["registros"], 1)
         por_faixa[f["faixa"]] = {
-            "registos": f["registos"],
+            "registros": f["registros"],
             "com_quantidade_um": f["com_quantidade_um"],
-            "percentagem_com_quantidade_um": pct,
+            "porcentagem_com_quantidade_um": pct,
         }
     return {
         "por_faixa": por_faixa,
-        "percentagem_com_quantidade_um_na_base": float(base),
+        "porcentagem_com_quantidade_um_na_base": float(base),
     }
 
 
@@ -174,7 +174,7 @@ def agregado(ligacao) -> dict:
             select 'sem_altos', * from base where razao < {RAZAO_ALTA}
         )
         select cenario,
-               count(*)                                                as registos,
+               count(*)                                                as registros,
                sum(preco_unitario * quantidade)                        as gasto,
                sum(greatest(preco_unitario - mediana, 0) * quantidade) as acima_da_mediana
           from cenarios group by cenario
@@ -186,10 +186,10 @@ def agregado(ligacao) -> dict:
         gasto = float(linha["gasto"])
         acima = float(linha["acima_da_mediana"])
         resultado[linha["cenario"]] = {
-            "registos": linha["registos"],
+            "registros": linha["registros"],
             "gasto": round(gasto, 2),
             "acima_da_mediana": round(acima, 2),
-            "percentagem_acima": round(100 * acima / gasto, 2) if gasto else None,
+            "porcentagem_acima": round(100 * acima / gasto, 2) if gasto else None,
         }
     return resultado
 

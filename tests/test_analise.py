@@ -56,7 +56,7 @@ def marts():
         """)
     ligacao.execute("""
         create table dbt_marts.mart_dispersao_grupo (
-            grupo_comparavel text, ano int, n_registos int,
+            grupo_comparavel text, ano int, n_registros int,
             p25 numeric, mediana numeric, p75 numeric, amostra_suficiente boolean
         )""")
     ligacao.execute("""
@@ -84,7 +84,7 @@ def marts():
         """)
     ligacao.execute("""
         create table dbt_quarentena.quarentena_resumo (
-            motivo text, registos int, percentagem_do_total numeric
+            motivo text, registros int, porcentagem_do_total numeric
         )""")
     ligacao.execute("insert into dbt_quarentena.quarentena_resumo values ('a',1,20.0)")
     ligacao.commit()
@@ -96,7 +96,7 @@ def marts():
 
 def test_cobertura_conta_entidades_distintas_e_nao_linhas(marts):
     c = resultados.cobertura(marts)
-    assert c.registos == 4
+    assert c.registros == 4
     assert c.compras == 3  # c1 aparece em duas linhas e conta uma vez
     assert c.fornecedores == 2
     assert c.municipios == 2
@@ -104,12 +104,12 @@ def test_cobertura_conta_entidades_distintas_e_nao_linhas(marts):
     assert c.ultimo_dia == "2025-05-01"
 
 
-def test_percentagem_excluida_usa_o_total_antes_da_exclusao(marts):
+def test_porcentagem_excluida_usa_o_total_antes_da_exclusao(marts):
     q = resultados.quarentena(marts)
-    assert q["registos_excluidos"] == 1
-    assert q["registos_analisados"] == 4
+    assert q["registros_excluidos"] == 1
+    assert q["registros_analisados"] == 4
     # 1 de 5, e nao 1 de 4: o denominador tem de incluir o que foi excluido.
-    assert q["percentagem_excluida"] == pytest.approx(20.0)
+    assert q["porcentagem_excluida"] == pytest.approx(20.0)
 
 
 def test_dispersao_ignora_grupos_sem_amostra(marts):
@@ -120,25 +120,25 @@ def test_dispersao_ignora_grupos_sem_amostra(marts):
 
 def test_cauda_extrema_separa_faixas_e_mede_quantidade_um(marts):
     c = resultados.cauda_extrema(marts)
-    assert c["por_faixa"]["extrema"]["registos"] == 3
-    assert c["por_faixa"]["extrema"]["percentagem_com_quantidade_um"] == pytest.approx(66.7)
-    assert c["por_faixa"]["alta"]["registos"] == 2
-    assert c["por_faixa"]["moderada"]["registos"] == 1
-    assert c["percentagem_com_quantidade_um_na_base"] == pytest.approx(100.0)
+    assert c["por_faixa"]["extrema"]["registros"] == 3
+    assert c["por_faixa"]["extrema"]["porcentagem_com_quantidade_um"] == pytest.approx(66.7)
+    assert c["por_faixa"]["alta"]["registros"] == 2
+    assert c["por_faixa"]["moderada"]["registros"] == 1
+    assert c["porcentagem_com_quantidade_um_na_base"] == pytest.approx(100.0)
 
 
 def test_agregado_soma_apenas_o_que_esta_acima_da_mediana(marts):
     a = resultados.agregado(marts)["todos"]
-    assert a["registos"] == 4
+    assert a["registros"] == 4
     assert a["gasto"] == pytest.approx(130.0)
     # Só a compra de 100 está acima: 90. As de 10 estão na mediana e as
     # abaixo nunca compensam as acima, por isso o `greatest(..., 0)`.
     assert a["acima_da_mediana"] == pytest.approx(90.0)
-    assert a["percentagem_acima"] == pytest.approx(69.23)
+    assert a["porcentagem_acima"] == pytest.approx(69.23)
 
 
 def test_agregado_exclui_extremos_no_cenario_correspondente(marts):
     a = resultados.agregado(marts)
     # 100 / 10 = 10x, abaixo dos limiares: nenhum cenario a remove.
-    assert a["sem_extremos"]["registos"] == 4
-    assert a["sem_altos"]["registos"] == 4
+    assert a["sem_extremos"]["registros"] == 4
+    assert a["sem_altos"]["registros"] == 4

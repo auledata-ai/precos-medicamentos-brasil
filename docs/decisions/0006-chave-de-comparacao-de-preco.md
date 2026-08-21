@@ -1,7 +1,7 @@
 # 0006: a chave de comparacao inclui capacidade e unidade de medida
 
 Data: 2026-08-21
-Estado: aceite
+Estado: aceito
 
 ## Contexto
 
@@ -12,10 +12,10 @@ separar por unidade de fornecimento resolvia isso.
 
 Nao resolvia. **"FRASCO" nao e uma quantidade.**
 
-Ao verificar o registo com a maior diferenca da lista de compras atipicas,
+Ao verificar o registro com a maior diferenca da lista de compras atipicas,
 um unico `grupo_comparavel` de alcool etilico continha:
 
-| unidade | capacidade | registos | mediana |
+| unidade | capacidade | registros | mediana |
 |---|---|---|---|
 | FRASCO | 500 ML | 780 | R$ 5,62 |
 | FRASCO | 1000 ML | 149 | R$ 8,30 |
@@ -28,7 +28,7 @@ Frascos de 50 ML a 2 L no mesmo grupo, e volume misturado com massa. A
 dispersao medida era em boa parte artefacto de tamanho, nao de preco.
 
 **Dimensao do erro:** 781 dos 2.325 grupos com amostra util, 182.377
-registos, 32% da base. A mediana do grupo do alcool passou de R$ 6,20 para
+registros, 32% da base. A mediana do grupo do alcool passou de R$ 6,20 para
 R$ 8,96 depois da correcao, ou seja, a referencia contra a qual toda a lista
 de atipicas era calculada estava contaminada.
 
@@ -44,17 +44,17 @@ Duas chaves, com propositos distintos.
 sao dentro da mesma grandeza fisica: L e MCL vao para ML, KG, MG e MCG vao
 para G. **Volume e massa nunca se convertem entre si.**
 
-Metade dos registos (286.350) nao declara unidade de medida, e nesses a
+Metade dos registros (286.350) nao declara unidade de medida, e nesses a
 capacidade vem a zero. Ficam com `unidade_base` e `preco_por_unidade_base`
 nulos, em vez de assumir 1. Assumir inventaria dado.
 
 ## Consequencias
 
 Os grupos passaram de 34.393 para 43.895, e os que tem amostra util (30 ou
-mais registos) subiram de 2.325 para 4.293: a chave e mais fina, mas separar
+mais registros) subiram de 2.325 para 4.293: a chave e mais fina, mas separar
 tamanhos revelou grupos que antes estavam escondidos dentro de outros.
 
-A lista de compras atipicas desceu de 8.102 para 7.772 registos, e as razoes
+A lista de compras atipicas desceu de 8.102 para 7.772 registros, e as razoes
 mudaram. O alcool com maior diferenca passou de 23,6x para 16,3x.
 
 O teste `grupo_comparavel_nao_mistura_tamanhos` falha se alguem voltar a
@@ -65,5 +65,5 @@ simplificar a chave.
 E o mesmo erro do `VL_SA` na PoC Saude, noutra forma: **semantica de coluna
 de fonte publica nao se infere do nome.** "FRASCO" parecia uma unidade
 comparavel e nao era. Nos dois casos o defeito produzia numeros plausiveis,
-e nos dois casos so apareceu ao verificar um registo concreto contra a
+e nos dois casos so apareceu ao verificar um registro concreto contra a
 fonte, nunca ao olhar para o agregado.

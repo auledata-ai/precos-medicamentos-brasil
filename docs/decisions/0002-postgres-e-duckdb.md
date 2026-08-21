@@ -1,10 +1,10 @@
 # ADR 0002: Postgres para ingestão, DuckDB para análise
 
-**Data:** 2026-08-21 · **Estado:** aceite
+**Data:** 2026-08-21 · **Estado:** aceito
 
 ## Contexto
 
-O universo estimado é de cerca de 490 mil registos de preço, medido por
+O universo estimado é de cerca de 490 mil registros de preço, medido por
 amostragem contra a API real. É um volume pequeno.
 
 ## Decisão
@@ -25,14 +25,14 @@ lakehouse num pipeline que era pandas local. O leitor técnico nota, e o custo
 ## Porquê Postgres na ingestão
 
 A ingestão precisa de escrita transacional com `upsert` por chave natural,
-para ser idempotente, e de uma tabela de controlo consultada e atualizada a
+para ser idempotente, e de uma tabela de controle consultada e atualizada a
 cada item. É carga transacional, e é o que Postgres faz bem.
 
 ## Porquê DuckDB na análise
 
 As consultas analíticas são varreduras colunares com agregação por grupo.
 DuckDB executa isso sobre parquet em milissegundos, sem servidor, e o
-ficheiro resultante é versionável e distribuível junto com o estudo.
+arquivo resultante é versionável e distribuível junto com o estudo.
 
 ## Consequências
 
