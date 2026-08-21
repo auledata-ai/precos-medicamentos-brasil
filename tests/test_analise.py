@@ -177,9 +177,9 @@ class TestGraficos:
 
         a = graficos.assinatura_quantidade_um(marts)
         assert [b["faixa"] for b in a["barras"]] == [
-            "1.000x ou mais",
-            "100x a 1.000x",
-            "10x a 100x",
+            "1.000x acima do normal",
+            "100x a 1.000x acima",
+            "10x a 100x acima",
         ]
         assert a["barras"][0]["porcentagem"] == pytest.approx(66.7)
         # Todos os quatro registros da base têm quantidade 1.
