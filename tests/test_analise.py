@@ -142,3 +142,45 @@ def test_agregado_exclui_extremos_no_cenario_correspondente(marts):
     # 100 / 10 = 10x, abaixo dos limiares: nenhum cenario a remove.
     assert a["sem_extremos"]["registros"] == 4
     assert a["sem_altos"]["registros"] == 4
+
+
+class TestGraficos:
+    """Os conjuntos de dados dos gráficos, sobre as mesmas marts sintéticas."""
+
+    def test_histograma_agrupa_por_passo_e_conta_o_miolo(self, marts):
+        from analise import graficos
+
+        h = graficos.histograma_dispersao(marts)
+        # Um só grupo com amostra, razão 20/10 = 2,0. Cai na barra que
+        # começa em 2,0 e fica fora do miolo até 1,75.
+        assert h["total_grupos"] == 1
+        assert h["barras"] == [{"inicio": 2.0, "fim": 2.25, "rotulo": "2,00", "grupos": 1}]
+        assert h["grupos_ate_1_75"] == 0
+        assert h["porcentagem_ate_1_75"] == 0.0
+
+    def test_histograma_junta_a_cauda_numa_barra_final(self, marts):
+        from analise import graficos
+
+        marts.execute(
+            "insert into dbt_marts.mart_dispersao_grupo values ('X', 2025, 30, 1, 1, 99, true)"
+        )
+        h = graficos.histograma_dispersao(marts)
+        # 99/1 = 99x, muito acima do teto: tem de cair na barra final e não
+        # esticar o eixo até 99, que deixaria o resto invisível.
+        final = h["barras"][-1]
+        assert final["inicio"] == graficos.RAZAO_MAXIMA_HISTOGRAMA
+        assert final["fim"] is None
+        assert "ou mais" in final["rotulo"]
+
+    def test_assinatura_compara_cada_faixa_com_a_base(self, marts):
+        from analise import graficos
+
+        a = graficos.assinatura_quantidade_um(marts)
+        assert [b["faixa"] for b in a["barras"]] == [
+            "1.000x ou mais",
+            "100x a 1.000x",
+            "10x a 100x",
+        ]
+        assert a["barras"][0]["porcentagem"] == pytest.approx(66.7)
+        # Todos os quatro registros da base têm quantidade 1.
+        assert a["base"] == pytest.approx(100.0)

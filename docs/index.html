@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="pt-BR">
+<meta charset="utf-8">
+<title>Preços de medicamentos: os três achados</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  /* Tokens de aulesite/app/globals.css. O trio de dados (blue, cyan, indigo)
+     passou os seis checks contra a superfície escura. Amber falha a banda de
+     luminosidade como slot categórico, e por isso só entra como linha de
+     referência e texto, nunca como preenchimento de série. */
+  :root {
+    --midnight: #05070f;
+    --surface:  #0d1530;
+    --blue:     #2563eb;
+    --cyan:     #0891b2;
+    --amber:    #e9a23b;
+    --ink:      #ffffff;
+    --ink-2:    #c3cee2;
+    --ink-3:    #8093b3;
+    --apagado:  #33415c;   /* de-ênfase: contexto, não série */
+    --grelha:   rgba(255,255,255,.07);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    width: 1200px; background: var(--midnight); color: var(--ink);
+    font-family: Archivo, system-ui, sans-serif; padding: 44px 52px 40px;
+  }
+  .eyebrow {
+    font-family: "JetBrains Mono", monospace; font-size: 12px;
+    letter-spacing: .18em; text-transform: uppercase; color: var(--cyan);
+  }
+  h1 { font-size: 32px; font-weight: 700; letter-spacing: -.02em; margin: 8px 0 4px; }
+  .lede { font-size: 15px; color: var(--ink-3); }
+
+  section { margin-top: 40px; background: var(--surface); border-radius: 14px;
+            border: 1px solid rgba(255,255,255,.08); padding: 26px 28px 22px; }
+  h2 { font-size: 19px; font-weight: 600; letter-spacing: -.01em; }
+  .sub { font-size: 13px; color: var(--ink-3); margin-top: 5px; line-height: 1.45; }
+
+  svg { display: block; margin-top: 20px; overflow: visible; }
+  .grelha { stroke: var(--grelha); stroke-width: 1; }
+  .eixo { fill: var(--ink-3); font-size: 11px; font-family: "JetBrains Mono", monospace; }
+  .rotulo { fill: var(--ink-2); font-size: 12px; font-weight: 600;
+            font-family: "JetBrains Mono", monospace; }
+  .barra { transition: opacity .12s; }
+  .barra:hover { opacity: .78; }
+
+  .kpis { display: flex; gap: 14px; margin-top: 20px; }
+  .kpi { flex: 1; background: rgba(255,255,255,.03); border-radius: 10px;
+         padding: 16px 18px; border-left: 3px solid var(--blue); }
+  .kpi .n { font-family: "JetBrains Mono", monospace; font-size: 27px;
+            font-weight: 700; letter-spacing: -.02em; }
+  .kpi .q { font-size: 12px; color: var(--ink-3); margin-top: 4px; line-height: 1.4; }
+
+  .nota { margin-top: 16px; font-size: 12.5px; color: var(--ink-3); line-height: 1.5; }
+  .nota b { color: var(--amber); font-weight: 600; }
+
+  details { margin-top: 14px; }
+  summary { font-size: 12px; color: var(--ink-3); cursor: pointer; }
+  table { border-collapse: collapse; margin-top: 10px; font-size: 12px; }
+  th, td { text-align: right; padding: 4px 12px 4px 0; color: var(--ink-2);
+           font-family: "JetBrains Mono", monospace; }
+  th { color: var(--ink-3); font-weight: 500; border-bottom: 1px solid var(--grelha); }
+  td:first-child, th:first-child { text-align: left; }
+</style>
+
+<div class="eyebrow">Aule Data / compras.gov.br / 2021 a 2026</div>
+<h1>Preços de medicamentos em compras públicas</h1>
+<div class="lede">563.881 registros comparáveis. Três achados que se contradizem, e é aí que está o estudo.</div>
+
+<section>
+  <h2>1. No mercado comum, a dispersão é modesta</h2>
+  <div class="sub">
+    Razão entre o percentil 75 e o 25 do preço, dentro do mesmo produto, mesmo
+    tamanho de embalagem e mesmo ano. Grupos com pelo menos 30 registros.
+  </div>
+  <svg id="g1" width="1092" height="290" role="img"
+       aria-label="Histograma da dispersão de preço por grupo"></svg>
+  <div class="nota" id="n1"></div>
+  <details><summary>ver dados</summary><table id="t1"></table></details>
+</section>
+
+<section>
+  <h2>2. A cauda absurda é padrão de registro, não preço</h2>
+  <div class="sub">
+    Porcentagem de compras com quantidade igual a 1, por quanto o preço excede
+    a mediana do próprio grupo. A linha marca a taxa na base inteira.
+  </div>
+  <svg id="g2" width="1092" height="230" role="img"
+       aria-label="Porcentagem com quantidade um por faixa de exagero"></svg>
+  <div class="nota" id="n2"></div>
+  <details><summary>ver dados</summary><table id="t2"></table></details>
+</section>
+
+<section>
+  <h2>3. O dinheiro não está nos absurdos</h2>
+  <div class="sub">
+    Quanto do gasto ficou acima da mediana do próprio grupo, removendo
+    progressivamente os valores extremos.
+  </div>
+  <div class="kpis" id="k3"></div>
+  <div class="nota" id="n3"></div>
+</section>
+
+<script type="module">
+const NS = "http://www.w3.org/2000/svg";
+const el = (t, a = {}) => {
+  const n = document.createElementNS(NS, t);
+  for (const [k, v] of Object.entries(a)) n.setAttribute(k, v);
+  return n;
+};
+const num = n => n.toLocaleString("pt-BR");
+const pct = n => n.toLocaleString("pt-BR", {minimumFractionDigits: 1, maximumFractionDigits: 1});
+
+const [graficos, resultados] = await Promise.all([
+  fetch("./dados/graficos.json").then(r => r.json()),
+  fetch("./dados/resultados.json").then(r => r.json()),
+]);
+
+/* --- 1. histograma, ênfase: o miolo em cor, a cauda em cinza de contexto --- */
+{
+  const d = graficos.histograma_dispersao;
+  const svg = document.getElementById("g1");
+  const W = 1092, H = 290, ME = 46, MB = 40, MT = 16, MD = 6;
+  const larg = (W - ME - MD) / d.barras.length;
+  const bruto = Math.max(...d.barras.map(b => b.grupos));
+  // Passo redondo, senão o eixo fica com 831 e 1.246, que ninguém lê.
+  const passo = Math.pow(10, Math.floor(Math.log10(bruto / 4))) *
+                [1, 2, 5, 10].find(m => bruto / 4 <= Math.pow(10, Math.floor(Math.log10(bruto / 4))) * m);
+  const topo = Math.ceil(bruto / passo) * passo;
+  const y = v => MT + (H - MT - MB) * (1 - v / topo);
+
+  for (let v = 0; v <= topo; v += passo) {
+    svg.appendChild(el("line", {class: "grelha", x1: ME, x2: W - 4, y1: y(v), y2: y(v)}));
+    const t = el("text", {class: "eixo", x: ME - 8, y: y(v) + 4, "text-anchor": "end"});
+    t.textContent = num(v); svg.appendChild(t);
+  }
+
+  d.barras.forEach((b, i) => {
+    const destaque = b.inicio < 1.75;
+    const x = ME + i * larg, alt = Math.max(H - MB - y(b.grupos), 2);
+    // 2px de folga entre barras, e canto arredondado só no topo.
+    const r = el("rect", {
+      class: "barra", x: x + 1, y: y(b.grupos), width: larg - 2, height: alt,
+      rx: 4, fill: destaque ? "var(--blue)" : "var(--apagado)",
+    });
+    r.appendChild(el("title")).textContent =
+      `${b.rotulo}x  ·  ${num(b.grupos)} grupos`;
+    svg.appendChild(r);
+
+    // Rótulo direto só onde ajuda: as três barras do miolo.
+    if (b.grupos > topo * 0.15) {
+      const t = el("text", {class: "rotulo", x: x + larg / 2, y: y(b.grupos) - 7,
+                            "text-anchor": "middle"});
+      t.textContent = num(b.grupos); svg.appendChild(t);
+    }
+    if (i % 2 === 0 || b.fim === null) {
+      const t = el("text", {class: "eixo", x: x + larg / 2, y: H - MB + 18,
+                            "text-anchor": "middle"});
+      t.textContent = b.fim === null ? "4,0x+" : b.rotulo + "x";
+      svg.appendChild(t);
+    }
+  });
+
+  document.getElementById("n1").innerHTML =
+    `<b>${pct(d.porcentagem_ate_1_75)}% dos ${num(d.total_grupos)} grupos</b> ficam abaixo de 1,75x. ` +
+    `No grupo típico uma compra cara custa 42% mais que uma barata, o que é compatível ` +
+    `com prazo de entrega, quantidade mínima e logística.`;
+  document.getElementById("t1").innerHTML =
+    "<tr><th>razão</th><th>grupos</th></tr>" +
+    d.barras.map(b => `<tr><td>${b.rotulo}x</td><td>${num(b.grupos)}</td></tr>`).join("");
+}
+
+/* --- 2. barras horizontais com linha de referência --- */
+{
+  const d = graficos.assinatura_quantidade_um;
+  const svg = document.getElementById("g2");
+  const W = 1092, ME = 190, MD = 90, alt = 44, gap = 22, MT = 12;
+  const topo = Math.max(...d.barras.map(b => b.porcentagem)) * 1.1;
+  const x = v => ME + (W - ME - MD) * (v / topo);
+
+  d.barras.forEach((b, i) => {
+    const yb = MT + i * (alt + gap);
+    const r = el("rect", {class: "barra", x: ME, y: yb,
+                          width: Math.max(x(b.porcentagem) - ME, 3), height: alt,
+                          rx: 4, fill: "var(--blue)"});
+    r.appendChild(el("title")).textContent =
+      `${b.faixa}  ·  ${pct(b.porcentagem)}% de ${num(b.registros)} registros`;
+    svg.appendChild(r);
+
+    const nome = el("text", {class: "rotulo", x: ME - 14, y: yb + alt / 2 + 5,
+                             "text-anchor": "end"});
+    nome.textContent = b.faixa; svg.appendChild(nome);
+
+    const val = el("text", {class: "rotulo", x: x(b.porcentagem) + 12,
+                            y: yb + alt / 2 + 5});
+    val.textContent = pct(b.porcentagem) + "%"; svg.appendChild(val);
+  });
+
+  // Referência: a taxa na base inteira. Amber, fino, com rótulo.
+  const H2 = MT + d.barras.length * (alt + gap);
+  const xr = x(d.base);
+  svg.appendChild(el("line", {x1: xr, x2: xr, y1: MT - 6, y2: H2 - gap + 6,
+                              stroke: "var(--amber)", "stroke-width": 2,
+                              "stroke-dasharray": "4 4"}));
+  const rt = el("text", {x: xr + 8, y: H2 - gap + 22, class: "eixo",
+                         fill: "var(--amber)"});
+  rt.textContent = `base inteira: ${d.base.toLocaleString("pt-BR")}%`;
+  svg.appendChild(rt);
+
+  document.getElementById("n2").innerHTML =
+    `Quantidade 1 aparece em <b>${d.base.toLocaleString("pt-BR")}% da base</b> e em ` +
+    `<b>${pct(d.barras[0].porcentagem)}% dos registros mais absurdos</b>: concentração de ` +
+    `${d.concentracao}x. É a assinatura da compra inteira lançada como uma unidade só. ` +
+    `Sinvastatina a R$ 750.000 não é um comprimido caro.`;
+  document.getElementById("t2").innerHTML =
+    "<tr><th>faixa</th><th>registros</th><th>com quantidade 1</th></tr>" +
+    d.barras.map(b => `<tr><td>${b.faixa}</td><td>${num(b.registros)}</td><td>${pct(b.porcentagem)}%</td></tr>`).join("");
+}
+
+/* --- 3. três números quase iguais: fila de indicadores, não gráfico --- */
+{
+  const a = resultados.agregado;
+  const cenarios = [
+    ["todos", "todos os registros"],
+    ["sem_extremos", "sem os acima de 1.000x a mediana"],
+    ["sem_altos", "sem os acima de 100x a mediana"],
+  ];
+  document.getElementById("k3").innerHTML = cenarios.map(([chave, nome]) => `
+    <div class="kpi">
+      <div class="n">${a[chave].porcentagem_acima.toLocaleString("pt-BR", {minimumFractionDigits: 2})}%</div>
+      <div class="q">${nome}<br>R$ ${(a[chave].acima_da_mediana / 1e9).toFixed(2).replace(".", ",")} bi acima da mediana</div>
+    </div>`).join("");
+
+  const delta = (a.todos.porcentagem_acima - a.sem_altos.porcentagem_acima).toFixed(2);
+  document.getElementById("n3").innerHTML =
+    `Remover tudo acima de 100 vezes a mediana move o resultado em ` +
+    `<b>${delta.replace(".", ",")} ponto percentual</b>. A diferença vem do meio da ` +
+    `distribuição, não das pontas. Caçar os escândalos é caçar erro de digitação.`;
+}
+</script>
+
+<footer style="margin-top:38px;padding-top:20px;border-top:1px solid var(--grelha);
+               font-size:12.5px;color:var(--ink-3);line-height:1.6">
+  Fonte: <a href="https://dadosabertos.compras.gov.br/" style="color:var(--ink-2)">API de
+  pesquisa de preços do Compras.gov.br</a>. Método, código e decisões em
+  <a href="https://github.com/auledata-ai/precos-medicamentos-brasil" style="color:var(--ink-2)">github.com/auledata-ai/precos-medicamentos-brasil</a>.<br>
+  Estes números medem distância a uma referência interna, não prejuízo, e não
+  identificam fraude. O que <a href="https://github.com/auledata-ai/precos-medicamentos-brasil/blob/main/docs/resultados.md" style="color:var(--ink-2)">não se pode concluir</a> deles está documentado.<br><br>
+  <a href="https://auledata.com.br" style="color:var(--cyan);text-decoration:none">Aule Data</a>
+</footer>
+</html>

@@ -6,6 +6,8 @@ O mesmo remédio, comprado por órgãos públicos diferentes, custa quanto?
 entre 2021 e 2026, coletados e analisados por um pipeline que roda inteiro
 num Docker Compose.
 
+**[Ver o painel](https://auledata-ai.github.io/precos-medicamentos-brasil/)**
+
 ![Arquitetura](docs/arquitetura/arquitetura.png)
 
 ## O que os dados dizem
@@ -23,6 +25,8 @@ inteira. É a assinatura da compra inteira lançada como uma unidade só.
 **O dinheiro não está nos absurdos.** Remover tudo acima de 100 vezes a
 mediana muda o agregado em 0,16 ponto percentual. A diferença vem do meio da
 distribuição, não das pontas.
+
+![Os três achados](docs/graficos/graficos.png)
 
 Os números completos, e o que eles **não** dizem, estão em
 [docs/resultados.md](docs/resultados.md).
@@ -62,6 +66,11 @@ A coleta completa leva pouco mais de uma hora, sequencial de propósito: o
 limite da fonte é de concorrência, não de taxa.
 
 Depois:
+
+A DAG corre o pipeline inteiro: coleta, `dbt build` e a publicação dos
+números em `docs/dados/`. Não há passo manual entre a fonte e o painel.
+
+Para correr a transformação sozinha, fora do Airflow:
 
 ```bash
 export DBT_PROFILES_DIR=$PWD/dbt POSTGRES_HOST=localhost POSTGRES_PORT=5433
